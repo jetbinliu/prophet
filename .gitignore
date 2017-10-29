@@ -1,0 +1,14 @@
+/target/
+.classpath
+.project
+.settings/
+target/
+.DS_Store
+**/cobertura
+logs/
+**/.springBeans
+.idea
+*.iml
+*.jar
+/.swp
+.git
