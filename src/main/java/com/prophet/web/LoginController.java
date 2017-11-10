@@ -1,45 +1,43 @@
 package com.prophet.web;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
-
+//import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.ModelAndView;
-
-import com.prophet.domain.*;
-import com.prophet.service.*;
-import com.prophet.web.LoginCommand;
+import com.prophet.domain.HiveMetaStore;
+import com.prophet.service.HiveMetaStoreService;
 
 @RestController
 public class LoginController {
-	private UserService userService;
-	
-	
-	@RequestMapping(value = {"/", "/index.html"})		//可以配置多个映射路径
-	public ModelAndView loginPage() {
-		return new ModelAndView("login");
-	}
-	
-	@RequestMapping(value = "/loginCheck.html")
-	public ModelAndView loginCheck(HttpServletRequest request, LoginCommand loginCommand) {
-		boolean isValidUser = userService.hasMatchUser(loginCommand.getUserName(), loginCommand.getPassword());
-		if (!isValidUser) {
-			//ModelAndView第一个参数是视图逻辑名，第二个第三个分别为模型名称和模型对象，作为kv形式存到request属性中。
-			return new ModelAndView("login", "error", "用户名或密码错误");
-		} else {
-			User user = userService.findUserByUserName(loginCommand.getUserName());
-			user.setLastIp(request.getLocalAddr());
-			user.setLastVisit(new Date());
-			userService.loginSuccess(user);
-			request.getSession().setAttribute("user", user);
-			return new ModelAndView("main");
-		}
-	}
+	private HiveMetaStoreService hiveMetaStoreService;
+	private com.prophet.dao.HiveServer2Dao h;
 	
 	@Autowired
-	public void setUserService(UserService userService) {
-		this.userService = userService;
+	public void setH(com.prophet.dao.HiveServer2Dao h) {
+		this.h = h;
 	}
+
+	@Autowired
+	public void setHiveMetaStoreService(HiveMetaStoreService hiveMetaStoreService) {
+		this.hiveMetaStoreService = hiveMetaStoreService;
+	}
+	
+	@RequestMapping(value = "/test1.json" )
+	public java.util.HashMap<String, Integer> aaa(HttpServletRequest request) {
+		java.util.HashMap<String, Integer> m = new java.util.HashMap<String, Integer>();
+		m.put("aaa", 123);
+		m.put("bbb", new Integer(444));
+		//JSONObject j = JSONObject.fromObject(m);
+		return m;
+	}
+	
+	@RequestMapping(value = "/json1.json")
+	public Object json1(HttpServletRequest request){
+		return this.hiveMetaStoreService.getAllDbAndTablesInMetaStore();
+	}
+	
 }

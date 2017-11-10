@@ -7,16 +7,14 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 
 @SpringBootApplication
-@ComponentScan
 @EnableTransactionManagement
+//@ComponentScan
 public class Application extends SpringBootServletInitializer{
-
-	public static void main(String[] args) throws Exception{
-		// TODO Auto-generated method stub
-		SpringApplication.run(Application.class, args);
-	}
-
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
 		return application.sources(Application.class);
+	}
+
+	public static void main(String[] args) throws Exception{
+		SpringApplication.run(Application.class, args);
 	}
 }

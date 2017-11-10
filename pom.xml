@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.prophet</groupId>
   <artifactId>prophet</artifactId>
-  <packaging>war</packaging>
+  <packaging>jar</packaging>
   <version>0.0.1-SNAPSHOT</version>
   <name>prophet Maven Webapp</name>
   <url>http://maven.apache.org</url>
@@ -16,8 +16,12 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+	  <groupId>jdk.tools</groupId>
+      <artifactId>jdk.tools</artifactId>
+	  <version>1.8</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -30,8 +34,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>5.1.29</version>
-    </dependency>
+      </dependency>
     <dependency>
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-jasper</artifactId>
@@ -41,6 +44,36 @@
       <groupId>javax.servlet</groupId>
       <artifactId>jstl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>net.sf.json-lib</groupId>
+      <artifactId>json-lib-ext-spring</artifactId>
+      <version>1.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-jdbc</artifactId>
+      <version>1.2.1</version>
+      <exclusions>  
+        <exclusion>  
+            <groupId>org.eclipse.jetty.aggregate</groupId>  
+            <artifactId>jetty-all</artifactId>  
+        </exclusion>  
+        <exclusion>  
+            <groupId>org.apache.hive</groupId>  
+            <artifactId>hive-shims</artifactId>  
+        </exclusion>  
+    </exclusions>
+    </dependency>
+    <dependency>  
+       <groupId>org.apache.hadoop</groupId>  
+       <artifactId>hadoop-common</artifactId>
+       <version>2.5.1</version>
+    </dependency>
+    <!--  <dependency>
+       <groupId>org.apache.hadoop</groupId>
+       <artifactId>hadoop-core</artifactId>
+       <version>1.2.1</version>
+    </dependency>  -->
   </dependencies>
   <build>
   	<plugins>
@@ -48,36 +81,6 @@
   			<groupId>org.springframework.boot</groupId>
   			<artifactId>spring-boot-maven-plugin</artifactId>
   		</plugin>
-  		<plugin>
-        <groupId>org.mortbay.jetty</groupId>
-        <artifactId>maven-jetty-plugin</artifactId>
-        <version>6.1.10</version>
-        <configuration>
-            <scanIntervalSeconds>10</scanIntervalSeconds>
-            <stopKey>foo</stopKey>
-            <stopPort>9999</stopPort>
-        </configuration>
-        <executions>
-                <execution>
-                        <id>start-jetty</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                                <goal>run</goal>
-                        </goals>
-                        <configuration>
-                                <scanIntervalSeconds>0</scanIntervalSeconds>
-                                <daemon>true</daemon>
-                        </configuration>
-                </execution>
-                <execution>
-                        <id>stop-jetty</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                                <goal>stop</goal>
-                        </goals>
-                </execution>
-        </executions>
-</plugin>
   	</plugins>
     <finalName>prophet</finalName>
   </build>
