@@ -37,7 +37,8 @@ public class LoginController {
 	
 	@RequestMapping(value = "/json1.json")
 	public Object json1(HttpServletRequest request){
-		return this.hiveMetaStoreService.getAllDbAndTablesInMetaStore();
+		//return this.hiveMetaStoreService.getAllDbAndTablesInMetaStore();
+		return this.hiveMetaStoreService;
 	}
 	
 }

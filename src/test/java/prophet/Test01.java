@@ -1,15 +1,35 @@
 package prophet;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.Arrays;
+import com.prophet.common.ThreadExecutor;
 
-public class Test01 {
+public class Test01 implements Callable<String>{
 
+	@Override
+	public String call() throws Exception {
+		// TODO Auto-generated method stub
+		return java.lang.Thread.currentThread().getName()+"";
+	}
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		HashMap<String, int[]> a = new HashMap<String, int[]>();
-		a.put("abc", new int[]{1,2,3});
-		a.put("abc", new int[]{1,2,3,4});
-		System.out.println(a.get("aaa")==null);
+		Test01 t1 = new Test01();
+		Test01 t2 = new Test01();
+		Future<String> f1 = ThreadExecutor.submit(t1);
+		Future<String> f2 = ThreadExecutor.submit(t2);
+		try {
+			System.out.println(f1.get());
+			System.out.println(f2.get(3000, TimeUnit.MILLISECONDS));
+		} catch (InterruptedException  | ExecutionException  | TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ThreadExecutor.shutdown();
 	}
 
 }

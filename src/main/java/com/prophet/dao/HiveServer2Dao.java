@@ -2,6 +2,7 @@ package com.prophet.dao;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -18,8 +19,18 @@ public class HiveServer2Dao {
 	@Qualifier("hiveServer2JdbcTemplate")
 	private JdbcTemplate jdbcTemplate;
 	
-	public List test1() {
-		String sql = "use formatter;show tables";
+	/**
+	 * 获取hive查询结果的方法
+	 * @param sqlContent
+	 * @return
+	 */
+	public List<Map<String, Object>> getHiveResult(String sqlContent) {
+		List<Map<String, Object>> hiveResult = jdbcTemplate.queryForList(sqlContent);
+		return hiveResult;
+	}
+	
+	public List<Map<String, Object>> descTableInfo(String tableNameWithDb) {
+		String sql = "describe " + tableNameWithDb;
 		return jdbcTemplate.queryForList(sql);
 	}
 }
