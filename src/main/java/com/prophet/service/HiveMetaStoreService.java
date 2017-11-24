@@ -9,10 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.prophet.dao.HiveMetaStoreDao;
-import com.prophet.domain.HiveMetaStore;
 
 @Service
-public class HiveMetaStoreService {
+public class HiveMetaStoreService extends BaseService{
 	private HiveMetaStoreDao hiveMetaStoreDao;
 
 	public HiveMetaStoreDao getHiveMetaStoreDao() {
@@ -39,26 +38,32 @@ public class HiveMetaStoreService {
 	 *    ]
 	 * }
 	 * */
-	public HashMap<String, ArrayList<HashMap<String, Object>>> getAllDbAndTablesInMetaStore() {
+	public Map<String, Object> getAllDbAndTablesInMetaStore() {
 		HashMap<String, ArrayList<HashMap<String, Object>>> dbTableResult = new HashMap<String, ArrayList<HashMap<String, Object>>>();
-		List<Map<String, Object>> daoResult = this.hiveMetaStoreDao.getAllDbAndTablesInMetaStore();
-		for (Map<String, Object> line : daoResult) {
-			//如果数据里的db在当前db组内
-			ArrayList<HashMap<String, Object>> previousList = dbTableResult.get(line.get("DB_NAME"));
-			if (previousList == null) {
-				//如果结果集里没有该db，则需要初始化一个空ArrayList出来；否则直接加入即可
-				previousList = new ArrayList<HashMap<String, Object>>();
+		List<Map<String, Object>> daoResult = null;
+		try {
+			daoResult = this.hiveMetaStoreDao.getAllDbAndTablesInMetaStore();
+			for (Map<String, Object> line : daoResult) {
+				//如果数据里的db在当前db组内
+				ArrayList<HashMap<String, Object>> previousList = dbTableResult.get(line.get("DB_NAME"));
+				if (previousList == null) {
+					//如果结果集里没有该db，则需要初始化一个空ArrayList出来；否则直接加入即可
+					previousList = new ArrayList<HashMap<String, Object>>();
+				}
+				HashMap<String, Object> currLine = new HashMap<String, Object>();
+				currLine.put("TBL_ID", line.get("TBL_ID"));
+				currLine.put("TBL_NAME", line.get("TBL_NAME"));
+				currLine.put("TBL_TYPE", line.get("TBL_TYPE"));
+				previousList.add(currLine);
+				
+				//覆盖性写入
+				dbTableResult.put(line.get("DB_NAME").toString(), previousList);
 			}
-			HashMap<String, Object> currLine = new HashMap<String, Object>();
-			currLine.put("TBL_ID", line.get("TBL_ID"));
-			currLine.put("TBL_NAME", line.get("TBL_NAME"));
-			currLine.put("TBL_TYPE", line.get("TBL_TYPE"));
-			previousList.add(currLine);
-			
-			//覆盖性写入
-			dbTableResult.put(line.get("DB_NAME").toString(), previousList);
+		} catch (Exception ex) {
+			this.serviceResult.put("msg", ex.getMessage());
 		}
-		return dbTableResult;
+		this.serviceResult.put("data", dbTableResult);
+		return this.serviceResult;
 	}
 	
 	

@@ -12,7 +12,7 @@ import com.prophet.domain.HiveMetaStore;
 import com.prophet.service.HiveMetaStoreService;
 
 @RestController
-public class LoginController {
+public class TestController {
 	private HiveMetaStoreService hiveMetaStoreService;
 	private com.prophet.dao.HiveServer2Dao h;
 	

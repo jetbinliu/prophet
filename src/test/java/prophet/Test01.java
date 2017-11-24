@@ -5,11 +5,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.Arrays;
 import com.prophet.common.ThreadExecutor;
 
 public class Test01 implements Callable<String>{
-
+	private int a = 10;
+	public int getA() {
+		return this.a;
+	}
+	
+	public Test01(){
+		System.out.println("a值原本是："+this.a);
+		this.a = 20;
+	}
+	
 	@Override
 	public String call() throws Exception {
 		// TODO Auto-generated method stub

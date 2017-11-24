@@ -1,4 +1,4 @@
-package com.prophet.web;
+package com.prophet.web.postparameters;
 
 public class HiveQueryCommand {
 	private String queryContent;
