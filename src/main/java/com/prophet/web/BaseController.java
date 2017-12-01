@@ -3,6 +3,8 @@ package com.prophet.web;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 public class BaseController {
 	
 	/**
@@ -20,5 +22,14 @@ public class BaseController {
 		restfulResult.put("message", serviceResult.get("msg"));
 		restfulResult.put("data", serviceResult.get("data"));
 		return restfulResult;
+	}
+	
+	/**
+	 * 获取当前session里登录的用户名
+	 * @param request
+	 * @return
+	 */
+	protected String getLoginUser(HttpServletRequest request) {
+		return "test1";
 	}
 }

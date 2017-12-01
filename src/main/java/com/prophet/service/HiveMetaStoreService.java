@@ -39,6 +39,7 @@ public class HiveMetaStoreService extends BaseService{
 	 * }
 	 * */
 	public Map<String, Object> getAllDbAndTablesInMetaStore() {
+		Map<String, Object> serviceResult = this.initServiceResult();
 		HashMap<String, ArrayList<HashMap<String, Object>>> dbTableResult = new HashMap<String, ArrayList<HashMap<String, Object>>>();
 		List<Map<String, Object>> daoResult = null;
 		try {
@@ -60,11 +61,9 @@ public class HiveMetaStoreService extends BaseService{
 				dbTableResult.put(line.get("DB_NAME").toString(), previousList);
 			}
 		} catch (Exception ex) {
-			this.serviceResult.put("msg", ex.getMessage());
+			serviceResult.put("msg", ex.getMessage());
 		}
-		this.serviceResult.put("data", dbTableResult);
-		return this.serviceResult;
+		serviceResult.put("data", dbTableResult);
+		return serviceResult;
 	}
-	
-	
 }

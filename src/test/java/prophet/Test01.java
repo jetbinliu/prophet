@@ -1,11 +1,15 @@
 package prophet;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import com.prophet.common.ThreadExecutor;
+import org.apache.commons.io.FileUtils;
 
 public class Test01 implements Callable<String>{
 	private int a = 10;
@@ -25,19 +29,9 @@ public class Test01 implements Callable<String>{
 	}
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		Test01 t1 = new Test01();
-		Test01 t2 = new Test01();
-		Future<String> f1 = ThreadExecutor.submit(t1);
-		Future<String> f2 = ThreadExecutor.submit(t2);
-		try {
-			System.out.println(f1.get());
-			System.out.println(f2.get(3000, TimeUnit.MILLISECONDS));
-		} catch (InterruptedException  | ExecutionException  | TimeoutException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		ThreadExecutor.shutdown();
+		String s ="col_name##@@#data_type##@@#comment##@@#";
+		String b[] =s.split("##@@#");
+		System.out.println(java.util.Arrays.toString(b));
 	}
 
 }
