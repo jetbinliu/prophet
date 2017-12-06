@@ -3,28 +3,24 @@ package com.prophet.service;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.io.IOException;
 import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.prophet.dao.HiveServer2Dao;
+import com.prophet.dao.HiveServerDao;
 import com.prophet.dao.QueryHistoryDao;
 import com.prophet.common.QueryHistoryStatusEnum;
 
 @Service
-public class HiveServer2Service extends BaseService{
-	private HiveServer2Dao hiveServer2Dao;
+public class HiveServerService extends BaseService{
+	private HiveServerDao hiveServerDao;
 	private QueryHistoryDao queryHistoryDao;
 
-	public HiveServer2Dao getHiveServer2Dao() {
-		return hiveServer2Dao;
-	}
 
 	@Autowired
-	public void setHiveServer2Dao(HiveServer2Dao hiveServer2Dao) {
-		this.hiveServer2Dao = hiveServer2Dao;
+	public void setHiveServerDao(HiveServerDao hiveServerDao) {
+		this.hiveServerDao = hiveServerDao;
 	}
 
 	@Autowired
@@ -45,7 +41,7 @@ public class HiveServer2Service extends BaseService{
 		dataWithType.put("data", colsAndData);
 		List<Map<String, Object>> daoResult = null;
 		try {
-			daoResult = this.hiveServer2Dao.descTableInfo(tableNameWithDb);
+			daoResult = this.hiveServerDao.descTableInfo(tableNameWithDb);
 			Set<String> columnSet = null;
 			if (!daoResult.isEmpty()) {
 				columnSet = daoResult.get(0).keySet();
@@ -72,7 +68,7 @@ public class HiveServer2Service extends BaseService{
 	 */
 	public Map<String, Object> executeHiveSqlQuery(String queryContent, String username, long queryHistId) {
 		//向hiveserver发送query
-		Map<String, Object> asyncResult = this.hiveServer2Dao.getHiveResultAsync(queryContent, username, queryHistId);
+		Map<String, Object> asyncResult = this.hiveServerDao.getHiveResultAsync(queryContent, username, queryHistId);
 		
 		//主线程一直阻塞直到任务执行完毕返回结果后，开始更新query_history的状态，以便前端轮询
 		if (asyncResult.get("msg").equals("ok")) {
@@ -97,7 +93,7 @@ public class HiveServer2Service extends BaseService{
 		Map<String, Object> serviceResult = this.initServiceResult();
 		Map<String, Object> daoResult = null;
 		try {
-			daoResult = this.hiveServer2Dao.getResultFromDiskById(username, queryHistId);
+			daoResult = this.hiveServerDao.getResultFromDiskById(username, queryHistId);
 		} catch (Exception ex) {
 			serviceResult.put("msg", ex.getMessage());
 		}

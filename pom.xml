@@ -26,7 +26,17 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+      <exclusions><!-- 去掉默认配置 -->  
+      	<exclusion>  
+	        <groupId>org.springframework.boot</groupId>  
+	        <artifactId>spring-boot-starter-logging</artifactId>  
+        </exclusion>  
+      </exclusions><!-- 去掉springbooot默认logger配置 -->
     </dependency>
+    <dependency> <!-- 引入log4j2依赖 -->  
+        <groupId>org.springframework.boot</groupId>  
+        <artifactId>spring-boot-starter-log4j2</artifactId>  
+    	</dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-jdbc</artifactId>
@@ -74,6 +84,7 @@
 	    <artifactId>commons-io</artifactId>
 	    <version>2.4</version>
 	</dependency>
+	
   </dependencies>
   <build>
   	<plugins>
@@ -81,7 +92,55 @@
   			<groupId>org.springframework.boot</groupId>
   			<artifactId>spring-boot-maven-plugin</artifactId>
   		</plugin>
+  		<plugin>  
+        	<groupId>org.apache.maven.plugins</groupId>  
+            <artifactId>maven-jar-plugin</artifactId>  
+            <version>2.6</version>  
+            <configuration>  
+                <archive>  
+                <!-- 添加index则不从mainfest中读取classpath，而是从Index.list中读取 -->  
+<!--                         <index>true</index> -->  
+                	<manifest>  
+                        <mainClass>com.prophet.Application</mainClass>  
+                        <!-- to create a class path to your dependecies you have to fill true   
+                            in this field -->  
+                        <addClasspath>true</addClasspath>  
+                        <classpathPrefix>lib/</classpathPrefix>  
+                        <!--<classpathLayoutType>custom</classpathLayoutType> <customClasspathLayout>   
+                                lib/
+									artifact.groupId.
+								{artifact.artifactId}.$${artifact.extension} </customClasspathLayout> -->  
+                    </manifest>  
+                    <manifestEntries>  
+                        <Class-Path>./</Class-Path>  
+                    </manifestEntries>  
+                </archive>  
+                <excludes>  
+                    <exclude>config/**</exclude>  
+                </excludes>  
+            </configuration>  
+    	</plugin> 
+    	<plugin>  
+        	<artifactId>maven-assembly-plugin</artifactId>  
+            <configuration>  
+                 <!-- not append assembly id in release file name -->  
+                 <appendAssemblyId>false</appendAssemblyId>  
+                 <descriptors>  
+                     <descriptor>src/main/build/package.xml</descriptor>  
+                 </descriptors>  
+            </configuration>  
+            <executions>  
+                <execution>  
+                    <id>make-assembly</id>  
+                    <phase>package</phase>  
+                    <goals>  
+                        <goal>single</goal>  
+                    </goals> 
+                </execution>  
+        	</executions>  
+        </plugin>  
   	</plugins>
     <finalName>prophet</finalName>
   </build>
+  
 </project>

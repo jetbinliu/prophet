@@ -5,23 +5,28 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.prophet.service.HiveMetaStoreService;
-import com.prophet.service.HiveServer2Service;
+import com.prophet.service.HiveServerService;
 import com.prophet.service.QueryHistoryService;
+import com.prophet.service.UserAuthService;
 
 import com.prophet.web.postparameters.HiveQueryCommand;
 
 @RestController
 public class HiveQueryController extends BaseController{
 	private HiveMetaStoreService hiveMetaStoreService;
-	private HiveServer2Service hiveServer2Service;
+	private HiveServerService hiveServerService;
 	private QueryHistoryService queryHistoryService;
+	private UserAuthService userAuthService;
+	
+	final static Logger logger = LoggerFactory.getLogger(HiveQueryController.class);
 
 	@Autowired
 	public void setHiveMetaStoreService(HiveMetaStoreService hiveMetaStoreService) {
@@ -29,8 +34,8 @@ public class HiveQueryController extends BaseController{
 	}
 	
 	@Autowired
-	public void setHiveServer2Service(HiveServer2Service hiveServer2Service) {
-		this.hiveServer2Service = hiveServer2Service;
+	public void setHiveServerService(HiveServerService hiveServerService) {
+		this.hiveServerService = hiveServerService;
 	}
 	
 	@Autowired
@@ -38,13 +43,18 @@ public class HiveQueryController extends BaseController{
 		this.queryHistoryService = queryHistoryService;
 	}
 	
+	@Autowired
+	public void setUserAuthService(UserAuthService userAuthService) {
+		this.userAuthService = userAuthService;
+	}
+
 	/**
 	 * 向前端返回所有metastore中的库表
 	 * @param request
 	 * @return
 	 */
 	@RequestMapping(value = "/hive_query/all_metastore_db_tables.json", method = RequestMethod.GET)
-	public Map<String, Object> allDbAndTablesInMetaStoreController(HttpServletRequest request){
+	public Map<String, Object> allDbAndTablesInMetaStoreController(HttpServletRequest request) throws Exception{
 		Map<String, Object> data = 
 				this.hiveMetaStoreService.getAllDbAndTablesInMetaStore();
 		return this.encodeToJsonResult(data);
@@ -58,7 +68,7 @@ public class HiveQueryController extends BaseController{
 	@RequestMapping(value = "/hive_query/desc_table.json", method = RequestMethod.GET)
 	public Map<String, Object> descTableController(HttpServletRequest request) {
 		String tableNameWithDb = request.getParameter("tableNameWithDb");
-		Map<String, Object> serviceResult = this.hiveServer2Service.descTable(tableNameWithDb);
+		Map<String, Object> serviceResult = this.hiveServerService.descTable(tableNameWithDb);
 		
 		return this.encodeToJsonResult(serviceResult);
 	}
@@ -76,7 +86,7 @@ public class HiveQueryController extends BaseController{
 		if (queryContent.endsWith(";")) {
 			queryContent = queryContent.substring(0, queryContent.length() - 1);
 		}
-		Map<String, Object> serviceResult = this.hiveServer2Service.executeHiveSqlQuery(queryContent, this.getLoginUser(request), queryHistId);
+		Map<String, Object> serviceResult = this.hiveServerService.executeHiveSqlQuery(queryContent, this.getLoginUser(request), queryHistId);
 		
 		return this.encodeToJsonResult(serviceResult);
 	}
@@ -125,7 +135,7 @@ public class HiveQueryController extends BaseController{
 	 */
 	@RequestMapping(value = "/hive_query/get_history_result.json", method = RequestMethod.GET)
 	public Map<String, Object> getHistoryResultController(HttpServletRequest request, @RequestParam("queryHistId") long queryHistId) {
-		Map<String, Object> serviceResult = this.hiveServer2Service.getHistoryResultFromDiskById(this.getLoginUser(request), queryHistId);
+		Map<String, Object> serviceResult = this.hiveServerService.getHistoryResultFromDiskById(this.getLoginUser(request), queryHistId);
 		return this.encodeToJsonResult(serviceResult);
 	}
 }

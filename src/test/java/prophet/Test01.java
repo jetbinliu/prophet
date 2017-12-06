@@ -2,7 +2,9 @@ package prophet;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -29,9 +31,8 @@ public class Test01 implements Callable<String>{
 	}
 	
 	public static void main(String[] args) {
-		String s ="col_name##@@#data_type##@@#comment##@@#";
-		String b[] =s.split("##@@#");
-		System.out.println(java.util.Arrays.toString(b));
+		Set<String> s = new HashSet<String>();
+		System.out.println(s.contains("ab"));
 	}
 
 }

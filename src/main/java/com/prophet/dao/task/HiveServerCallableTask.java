@@ -14,7 +14,7 @@ import org.apache.commons.io.FileUtils;
  * 开启多线程执行hive查询任务的线程执行体
  *
  */
-public class HiveServer2CallableTask implements Callable<Map<String, Object>>{
+public class HiveServerCallableTask implements Callable<Map<String, Object>>{
 	private JdbcTemplate jdbcTemplate;
 	private String queryContent;
 	
@@ -34,7 +34,7 @@ public class HiveServer2CallableTask implements Callable<Map<String, Object>>{
 		this.queryContent = sqlContent;
 	}
 
-	public HiveServer2CallableTask(String paramSqlContent) {
+	public HiveServerCallableTask(String paramSqlContent) {
 		this.queryContent = paramSqlContent;
 	}
 	
@@ -57,7 +57,7 @@ public class HiveServer2CallableTask implements Callable<Map<String, Object>>{
 		result.put("msg", "ok");
 		result.put("data", null);
 		
-		//参照com.prophet.service.HiveServer2Service.descTable()在hiveResult上层封装操作type
+		//参照com.prophet.service.HiveServerService.descTable()在hiveResult上层封装操作type
 		Map<String, Object> dataWithType = new HashMap<String, Object>();
 		dataWithType.put("type", "sql_query");
 		dataWithType.put("data", null);

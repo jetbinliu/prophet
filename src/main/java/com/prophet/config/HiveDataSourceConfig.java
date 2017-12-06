@@ -11,15 +11,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration
 public class HiveDataSourceConfig {
-	@Bean(name="hiveServer2DS")
-	@ConfigurationProperties(prefix="spring.ds_hive_server2")
-	public DataSource prophetHiveServer2DataSource() {
+	@Bean(name="hiveServerDS")
+	@ConfigurationProperties(prefix="spring.ds_hive_server")
+	public DataSource prophetHiveServerDataSource() {
 		return DataSourceBuilder.create().build();
 	}
 	
-	@Bean(name="hiveServer2JdbcTemplate")
-	public JdbcTemplate getHiveServer2JdbcTemplate(@Qualifier("hiveServer2DS") DataSource dsHiveServer2) {
-		return new JdbcTemplate(dsHiveServer2);
+	@Bean(name="hiveServerJdbcTemplate")
+	public JdbcTemplate getHiveServerJdbcTemplate(@Qualifier("hiveServerDS") DataSource dsHiveServer) {
+		return new JdbcTemplate(dsHiveServer);
 	}
 	
 }

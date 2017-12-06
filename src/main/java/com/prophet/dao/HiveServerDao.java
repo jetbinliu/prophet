@@ -16,13 +16,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.prophet.common.ThreadExecutor;
-import com.prophet.dao.task.HiveServer2CallableTask;
+import com.prophet.dao.task.HiveServerCallableTask;
 import com.prophet.dao.task.HiveResultWriteDiskTask;
 
 @Repository
-public class HiveServer2Dao {
+public class HiveServerDao {
 	@Autowired
-	@Qualifier("hiveServer2JdbcTemplate")
+	@Qualifier("hiveServerJdbcTemplate")
 	private JdbcTemplate jdbcTemplate;
 	
 	/**
@@ -33,7 +33,7 @@ public class HiveServer2Dao {
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> getHiveResultAsync(String queryContent, String username, long queryHistId) {
 		//开启新的线程去连接hive执行任务
-		HiveServer2CallableTask task = new HiveServer2CallableTask(queryContent);
+		HiveServerCallableTask task = new HiveServerCallableTask(queryContent);
 		task.setJdbcTemplate(this.jdbcTemplate);
 		
 		Future<Map<String, Object>> taskFuture = ThreadExecutor.submit(task);
