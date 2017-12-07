@@ -15,12 +15,11 @@ import org.apache.commons.io.FileUtils;
  * 开启线程将hive查询结果写入磁盘 
  *
  */
-public class HiveResultWriteDiskTask implements Runnable{
+public class HiveResultWriteDiskRunnableTask implements Runnable{
 	private List<Map<String, Object>> hiveData;
 	private Set<String> hiveCols;
 	private String username;
 	private long queryHistId;
-	
 
 	public List<Map<String, Object>> getHiveData() {
 		return hiveData;

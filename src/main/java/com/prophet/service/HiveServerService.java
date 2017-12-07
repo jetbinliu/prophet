@@ -17,7 +17,6 @@ public class HiveServerService extends BaseService{
 	private HiveServerDao hiveServerDao;
 	private QueryHistoryDao queryHistoryDao;
 
-
 	@Autowired
 	public void setHiveServerDao(HiveServerDao hiveServerDao) {
 		this.hiveServerDao = hiveServerDao;
@@ -66,11 +65,11 @@ public class HiveServerService extends BaseService{
 	 * @param username
 	 * @return
 	 */
-	public Map<String, Object> executeHiveSqlQuery(String queryContent, String username, long queryHistId) {
+	public Map<String, Object> executeHiveSqlQuery(String queryContent, String username, long queryHistId, int emailNotify) {
 		//向hiveserver发送query
-		Map<String, Object> asyncResult = this.hiveServerDao.getHiveResultAsync(queryContent, username, queryHistId);
+		Map<String, Object> asyncResult = this.hiveServerDao.getHiveResultAsync(queryContent, username, queryHistId, emailNotify);
 		
-		//主线程一直阻塞直到任务执行完毕返回结果后，开始更新query_history的状态，以便前端轮询
+		//主线程一直阻塞直到任务执行完毕返回结果后，开始同步更新query_history的状态，以便前端轮询
 		if (asyncResult.get("msg").equals("ok")) {
 			//如果任务执行完毕，返回结果正常
 			this.queryHistoryDao.updateQueryHistoryStatus(queryHistId, 
@@ -80,6 +79,7 @@ public class HiveServerService extends BaseService{
 			this.queryHistoryDao.updateQueryHistoryStatus(queryHistId, 
 					QueryHistoryStatusEnum.ERROR.getIndex());
 		}
+		
 		return asyncResult;
 	}
 	

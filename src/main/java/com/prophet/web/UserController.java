@@ -87,4 +87,5 @@ public class UserController extends BaseController{
 		controllerResult.put("data", this.getLoginUser(request));
 		return controllerResult;
 	}
+	
 }

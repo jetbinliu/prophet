@@ -18,6 +18,11 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency><!-- junit集成 -->
+  		<groupId>org.springframework.boot</groupId>
+  		<artifactId>spring-boot-starter-test</artifactId>
+  		<scope>test</scope>
+	</dependency>
     <dependency>
 	  <groupId>jdk.tools</groupId>
       <artifactId>jdk.tools</artifactId>
@@ -84,7 +89,10 @@
 	    <artifactId>commons-io</artifactId>
 	    <version>2.4</version>
 	</dependency>
-	
+	<dependency><!-- email -->
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-mail</artifactId>
+	</dependency>
   </dependencies>
   <build>
   	<plugins>
@@ -95,7 +103,6 @@
   		<plugin>  
         	<groupId>org.apache.maven.plugins</groupId>  
             <artifactId>maven-jar-plugin</artifactId>  
-            <version>2.6</version>  
             <configuration>  
                 <archive>  
                 <!-- 添加index则不从mainfest中读取classpath，而是从Index.list中读取 -->  

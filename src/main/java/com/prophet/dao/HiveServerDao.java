@@ -15,9 +15,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.prophet.dao.EmailUtil;
 import com.prophet.common.ThreadExecutor;
 import com.prophet.dao.task.HiveServerCallableTask;
-import com.prophet.dao.task.HiveResultWriteDiskTask;
+import com.prophet.dao.task.HiveResultWriteDiskRunnableTask;
+import com.prophet.dao.task.HiveResultSendmailRunnableTask;
 
 @Repository
 public class HiveServerDao {
@@ -25,13 +27,20 @@ public class HiveServerDao {
 	@Qualifier("hiveServerJdbcTemplate")
 	private JdbcTemplate jdbcTemplate;
 	
+	private EmailUtil emailUtil;
+	
+	@Autowired
+	public void setEmailUtil(EmailUtil emailUtil) {
+		this.emailUtil = emailUtil;
+	}
+
 	/**
 	 * 开启线程异步获取hive查询结果
 	 * @param sqlContent
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> getHiveResultAsync(String queryContent, String username, long queryHistId) {
+	public Map<String, Object> getHiveResultAsync(String queryContent, String username, long queryHistId, int emailNotify) {
 		//开启新的线程去连接hive执行任务
 		HiveServerCallableTask task = new HiveServerCallableTask(queryContent);
 		task.setJdbcTemplate(this.jdbcTemplate);
@@ -50,13 +59,22 @@ public class HiveServerDao {
 				Set<String> hiveCols = (Set<String>)(hiveColsAndData.get("result_cols"));
 				
 				//hive返回结果之后，开启新的线程将数据写入到磁盘文件，同时主线程可以立即返回
-				HiveResultWriteDiskTask hiveSyncTask = new HiveResultWriteDiskTask();
+				HiveResultWriteDiskRunnableTask hiveSyncTask = new HiveResultWriteDiskRunnableTask();
 				hiveSyncTask.setHiveData(hiveData);
 				hiveSyncTask.setHiveCols(hiveCols);
 				hiveSyncTask.setUsername(username);
 				hiveSyncTask.setQueryHistId(queryHistId);
 				
 				ThreadExecutor.execute(new Thread(hiveSyncTask, "HiveResultSyncDiskThread-" + queryHistId));
+			}
+			//如果用户选了邮件通知，则异步发送邮件
+			if (emailNotify == 1) {
+				HiveResultSendmailRunnableTask hiveMailTask = new HiveResultSendmailRunnableTask();
+				hiveMailTask.setEmailUtil(emailUtil);
+				hiveMailTask.setQueryHistId(queryHistId);
+				hiveMailTask.setMailToUser(username);
+				
+				ThreadExecutor.execute(new Thread(hiveMailTask, "HiveResultMailThread-" + queryHistId));
 			}
 			
 		} catch (Exception e) {

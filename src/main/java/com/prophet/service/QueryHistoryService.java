@@ -26,11 +26,11 @@ public class QueryHistoryService extends BaseService{
 	/**
 	 * 向prophet的数据库中插入一条查询历史
 	 */
-	public Map<String, Object> insertOneQueryHistory(String queryContent, String username) {
+	public Map<String, Object> insertOneQueryHistory(String queryContent, String username, int emailNotify) {
 		Map<String, Object> serviceResult = this.initServiceResult();
 		long insertId = -1;
 		try {
-			insertId = this.queryHistoryDao.insertQueryHistory(DateTimeUtil.getNow(), queryContent, QueryHistoryStatusEnum.RUNNING.getIndex(), username);
+			insertId = this.queryHistoryDao.insertQueryHistory(DateTimeUtil.getNow(), queryContent, QueryHistoryStatusEnum.RUNNING.getIndex(), username, emailNotify);
 		} catch (Exception ex) {
 			serviceResult.put("msg", ex.getMessage());
 		}

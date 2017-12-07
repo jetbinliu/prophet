@@ -3,6 +3,7 @@ package com.prophet.web.postparameters;
 public class HiveQueryCommand {
 	private String queryContent;
 	private long queryHistId;
+	private String emailNotify;
 
 	public String getQueryContent() {
 		return queryContent;
@@ -18,6 +19,14 @@ public class HiveQueryCommand {
 
 	public void setQueryHistId(long queryHistId) {
 		this.queryHistId = queryHistId;
+	}
+
+	public String getEmailNotify() {
+		return emailNotify;
+	}
+
+	public void setEmailNotify(String emailNotify) {
+		this.emailNotify = emailNotify;
 	}
 	
 }

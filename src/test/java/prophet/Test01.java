@@ -31,8 +31,7 @@ public class Test01 implements Callable<String>{
 	}
 	
 	public static void main(String[] args) {
-		Set<String> s = new HashSet<String>();
-		System.out.println(s.contains("ab"));
+		File f = new File("d:\\tmp\\aaa.txt");
 	}
 
 }

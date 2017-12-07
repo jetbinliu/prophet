@@ -1,5 +1,6 @@
 package com.prophet.web;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import com.prophet.service.QueryHistoryService;
 import com.prophet.service.UserAuthService;
 
 import com.prophet.web.postparameters.HiveQueryCommand;
+import com.prophet.dao.EmailUtil;
 
 @RestController
 public class HiveQueryController extends BaseController{
@@ -25,6 +27,11 @@ public class HiveQueryController extends BaseController{
 	private HiveServerService hiveServerService;
 	private QueryHistoryService queryHistoryService;
 	private UserAuthService userAuthService;
+	private EmailUtil eu;
+	@Autowired
+	public void setEu(EmailUtil eu) {
+		this.eu=eu;
+	}
 	
 	final static Logger logger = LoggerFactory.getLogger(HiveQueryController.class);
 
@@ -82,11 +89,13 @@ public class HiveQueryController extends BaseController{
 	public Map<String, Object> sendHiveSqlQueryController(HttpServletRequest request, HiveQueryCommand hiveQueryCommand) {
 		String queryContent = hiveQueryCommand.getQueryContent().trim();
 		long queryHistId = hiveQueryCommand.getQueryHistId();
+		String strEmailNotify = hiveQueryCommand.getEmailNotify();
+		int emailNotify = strEmailNotify.equals("true") ? 1 : 0;
 		//去掉结尾的分号
 		if (queryContent.endsWith(";")) {
 			queryContent = queryContent.substring(0, queryContent.length() - 1);
 		}
-		Map<String, Object> serviceResult = this.hiveServerService.executeHiveSqlQuery(queryContent, this.getLoginUser(request), queryHistId);
+		Map<String, Object> serviceResult = this.hiveServerService.executeHiveSqlQuery(queryContent, this.getLoginUser(request), queryHistId, emailNotify);
 		
 		return this.encodeToJsonResult(serviceResult);
 	}
@@ -100,8 +109,9 @@ public class HiveQueryController extends BaseController{
 	@RequestMapping(value = "/hive_query/save_query_history.json", method = RequestMethod.POST)
 	public Map<String, Object> saveQueryHistoryController(HttpServletRequest request, HiveQueryCommand hiveQueryCommand) {
 		String queryContent = hiveQueryCommand.getQueryContent();
-		//queryContent = "select * from mysql_db.t1fff";
-		Map<String, Object> serviceResult = this.queryHistoryService.insertOneQueryHistory(queryContent, this.getLoginUser(request));
+		String strEmailNotify = hiveQueryCommand.getEmailNotify();
+		int emailNotify = strEmailNotify.equals("true") ? 1 : 0;
+		Map<String, Object> serviceResult = this.queryHistoryService.insertOneQueryHistory(queryContent, this.getLoginUser(request), emailNotify);
 		return this.encodeToJsonResult(serviceResult);
 	}
 	
@@ -137,5 +147,15 @@ public class HiveQueryController extends BaseController{
 	public Map<String, Object> getHistoryResultController(HttpServletRequest request, @RequestParam("queryHistId") long queryHistId) {
 		Map<String, Object> serviceResult = this.hiveServerService.getHistoryResultFromDiskById(this.getLoginUser(request), queryHistId);
 		return this.encodeToJsonResult(serviceResult);
+	}
+	
+	@RequestMapping(value = "/test1.json", method = RequestMethod.GET)
+	public int test1(HttpServletRequest request) {
+		try {
+			this.eu.sendAttachmentsMail("jialiyang@baijiahulian.com", "多个邮件123", "我们都是中国人\n哈哈\t有一个空格\nover.", new String[]{"d:\\tmp\\jialiyang-101.txt", "d:\\tmp\\jialiyang-100.meta", "d:\\tmp\\jialiyang-102.txt"});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return 1;
 	}
 }

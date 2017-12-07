@@ -11,6 +11,7 @@ public class QueryHistory {
 	private int status;				//status和strStatus是枚举里index和name的关系，在此冗余查询方便而已
 	private String strStatus;
 	private String username;
+	private int emailNotify;
 	
 	public long getId() {
 		return id;
@@ -47,6 +48,12 @@ public class QueryHistory {
 	}
 	public void setUsername(String username) {
 		this.username = username;
+	}
+	public int getEmailNotify() {
+		return emailNotify;
+	}
+	public void setEmailNotify(int emailNotify) {
+		this.emailNotify = emailNotify;
 	}
 	
 }

@@ -35,9 +35,9 @@ public class QueryHistoryDao {
 	 * @return
 	 * @throws Exception
 	 */
-	public long insertQueryHistory(String queryTime, String queryContent, int status, String username) throws Exception {
-		String sql = "insert into query_history(query_time, query_content, status, username) "
-				+ "values(?, ?, ?, ?)";
+	public long insertQueryHistory(String queryTime, String queryContent, int status, String username, int emailNotify) throws Exception {
+		String sql = "insert into query_history(query_time, query_content, status, username, email_notify) "
+				+ "values(?, ?, ?, ?, ?)";
 		
 		//获取数据库自动生成的主键值
 		KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -50,6 +50,7 @@ public class QueryHistoryDao {
 				ps.setString(2, queryContent);
 				ps.setInt(3, status);
 				ps.setString(4, username);
+				ps.setInt(5, emailNotify);
 				return ps;
 			}
 			
@@ -110,7 +111,7 @@ public class QueryHistoryDao {
 	 * @return
 	 */
 	public QueryHistory getQueryHistoryById(long id) {
-		String sql = "select id, query_time, query_content, status, username from query_history where id=?";
+		String sql = "select id, query_time, query_content, status, username, email_notify from query_history where id=?";
 		Object[] args = {id};
 		QueryHistory q = new QueryHistory();
 		this.jdbcTemplate.query(sql, args, new RowCallbackHandler(){
@@ -127,6 +128,7 @@ public class QueryHistoryDao {
 					e.printStackTrace();
 				}
 				q.setUsername(rs.getString("username"));
+				q.setEmailNotify(rs.getInt("email_notify"));
 			}
 			
 		});
