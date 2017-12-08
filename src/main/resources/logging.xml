@@ -16,8 +16,8 @@
     		<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %class{36} %L %M - %msg%xEx%n"/>
     	</File> -->
     	<!-- 每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档-->
-    	<RollingFile name="RollingFile" fileName="logs\prophet.log"
-    		filePattern="logs\$${date:yyyy-MM-dd}\prophet-%d{yyyy-MM-dd}-%i.log">
+    	<RollingFile name="RollingFile" fileName="logs/prophet-logging.log"
+    		filePattern="logs/$${date:yyyy-MM-dd}\prophet-%d{yyyy-MM-dd}-logging-%i.log">
     		<PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss:SSS}] [%p] - %m%n"/>
     		<Policies>
     			<SizeBasedTriggeringPolicy size="50 MB" />

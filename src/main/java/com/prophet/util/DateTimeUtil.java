@@ -22,10 +22,5 @@ public class DateTimeUtil {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return dateFormat.format(time);
 	}
-	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		System.out.println(DateTimeUtil.getNow());
-	}
 
 }

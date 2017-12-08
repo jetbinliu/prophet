@@ -6,6 +6,8 @@ target/
 .DS_Store
 **/cobertura
 logs/
+tmp/
+data/
 **/.springBeans
 .idea
 *.iml

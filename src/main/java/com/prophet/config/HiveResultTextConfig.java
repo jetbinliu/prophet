@@ -1,7 +1,8 @@
 package com.prophet.config;
 
 public class HiveResultTextConfig {
-	private final static String HIVE_RESULT_FILE_DIR		= "d:\\tmp\\";
+	
+	private final static String HIVE_RESULT_FILE_DIR		= "data/";
 	public final static String HIVE_RESULT_FIELD_DELIMITER 	= "##@@#";
 	
 	/**
