@@ -67,4 +67,14 @@ public class QueryHistoryService extends BaseService{
 		serviceResult.put("data", qh);
 		return serviceResult;
 	}
+	
+	/**
+	 * 更新某个查询任务历史的状态
+	 * @param queryHistId
+	 * @param status
+	 */
+	public void updateQueryHistoryStatus(long queryHistId, QueryHistoryStatusEnum status) {
+		this.queryHistoryDao.updateQueryHistoryStatus(queryHistId, 
+				status.getIndex());
+	}
 }

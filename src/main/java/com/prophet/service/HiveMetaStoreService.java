@@ -25,7 +25,7 @@ public class HiveMetaStoreService extends BaseService{
 
 	/**
 	 * 查询metastore中所有的库名和对应包含的表名列表
-	 * 返回数据结构：{
+	 * 返回数据结构dbTableResult：{
 	 *    'default':[
 	 *      {'TBL_ID':21, 'TBL_NAME':'access_path1', 'TBL_TYPE':'EXTERNAL_TABLE'},
 	 *      {'TBL_ID':22, 'TBL_NAME':'access_path2', 'TBL_TYPE':'EXTERNAL_TABLE'},

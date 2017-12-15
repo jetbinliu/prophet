@@ -1,7 +1,10 @@
 package com.prophet.web;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,22 +19,17 @@ import org.slf4j.LoggerFactory;
 import com.prophet.service.HiveMetaStoreService;
 import com.prophet.service.HiveServerService;
 import com.prophet.service.QueryHistoryService;
-import com.prophet.service.UserAuthService;
-
+import com.prophet.service.HiveSecretDataService;
 import com.prophet.web.postparameters.HiveQueryCommand;
-import com.prophet.dao.EmailUtil;
+import com.prophet.common.HQLParser;
+import com.prophet.common.QueryHistoryStatusEnum;
 
 @RestController
 public class HiveQueryController extends BaseController{
 	private HiveMetaStoreService hiveMetaStoreService;
 	private HiveServerService hiveServerService;
 	private QueryHistoryService queryHistoryService;
-	private UserAuthService userAuthService;
-	private EmailUtil eu;
-	@Autowired
-	public void setEu(EmailUtil eu) {
-		this.eu=eu;
-	}
+	private HiveSecretDataService hiveSecretDataService;
 	
 	final static Logger logger = LoggerFactory.getLogger(HiveQueryController.class);
 
@@ -51,8 +49,8 @@ public class HiveQueryController extends BaseController{
 	}
 	
 	@Autowired
-	public void setUserAuthService(UserAuthService userAuthService) {
-		this.userAuthService = userAuthService;
+	public void setHiveSecretDataService(HiveSecretDataService hiveSecretDataService) {
+		this.hiveSecretDataService = hiveSecretDataService;
 	}
 
 	/**
@@ -81,7 +79,7 @@ public class HiveQueryController extends BaseController{
 	}
 	
 	/**
-	 * 向hiveserver发送SQL语句请求
+	 * 向hiveserver发送SQL语句请求，需要经过高危过滤、权限验证等前置检验
 	 * @param request
 	 * @param hiveQueryCommand
 	 */
@@ -95,6 +93,101 @@ public class HiveQueryController extends BaseController{
 		if (queryContent.endsWith(";")) {
 			queryContent = queryContent.substring(0, queryContent.length() - 1);
 		}
+		
+		Map<String, Object> restfulResult = new HashMap<String, Object>();
+		//首先解析HQL，拦截高危语句不发送到后端执行
+		HQLParser hqlParser = new HQLParser();
+		try {
+			hqlParser.parseHQL(queryContent);
+		} catch (Exception ex) {
+			//更新状态
+			this.queryHistoryService.updateQueryHistoryStatus(queryHistId, QueryHistoryStatusEnum.ERROR);
+			
+			restfulResult.put("status", 1);
+			restfulResult.put("message", ex.getMessage() + "\tCaused by: " + ex.getCause());
+			restfulResult.put("data", null);
+			return restfulResult;
+		}
+		
+		String oper = "";
+		Set<String> queriedTables = null;
+		try {
+			 oper = hqlParser.getOper();
+			 queriedTables = hqlParser.getTables();
+		} catch (Exception ex) {
+			//更新状态
+			this.queryHistoryService.updateQueryHistoryStatus(queryHistId, QueryHistoryStatusEnum.ERROR);
+			
+			restfulResult.put("status", 1);
+			restfulResult.put("message", "该SQL语句类型不支持!");
+			restfulResult.put("data", null);
+			return restfulResult;
+		}
+			
+		if (	oper.equals("INSERT") || oper.equals("DROP") || oper.equals("TRUNCATE") || 
+				oper.equals("LOAD") || oper.equals("CREATETABLE") || oper.equals("ALTER") ||
+				oper.equals("CREATEDATABASE") || oper.equals("DROPDATABASE")
+			) {
+			
+			//更新状态
+			this.queryHistoryService.updateQueryHistoryStatus(queryHistId, QueryHistoryStatusEnum.ERROR);
+			
+			restfulResult.put("status", 1);
+			restfulResult.put("message", "INSERT、DROP、TRUNCATE、LOAD、CREATETABLE、ALTER、CREATEDATABASE、DROPDATABASE等高危语句不运行执行!");
+			restfulResult.put("data", null);
+			return restfulResult;
+		} 
+		
+		//高危验证通过后，检查是否包含机密数据
+		List<Map<String, Object>> noPrivResult = new ArrayList<Map<String, Object>>();
+		for (String queriedTable : queriedTables) {
+			String queriedDb = "";
+			if (queriedTable.contains(".")) {
+				String[] dbAndTable = queriedTable.split("\\.");			//java里点号分割的正则必须是\\.
+				if (dbAndTable.length != 2) {
+					restfulResult.put("status", 1);
+					restfulResult.put("message", String.format("SQL语句%s表解析出来的db和table不对，请检查!", queriedTable));
+					restfulResult.put("data", null);
+					return restfulResult;
+				}
+				queriedDb = dbAndTable[0];
+				queriedTable = dbAndTable[1];
+			} else {
+				//如果不包含.  则为默认db
+				queriedDb = "default";
+			}
+			
+			List<Map<String, Object>> daoSecretResult = this.hiveSecretDataService.checkIsSecretTable(queriedDb, queriedTable);
+			if (daoSecretResult.size() != 0) {
+				//判断是机密数据的话，去检查该用户是否对其有权限
+				if (this.hiveSecretDataService.checkPrivilege(this.getLoginUser(request), queriedDb, queriedTable)) {
+					continue;
+				} else {
+					//该用户没有权限则提示没有该表权限
+					Map<String, Object> noPrivTable = new HashMap<String, Object>();
+					noPrivTable.put("table_id", daoSecretResult.get(0).get("id"));
+					noPrivTable.put("table_schema", queriedDb);
+					noPrivTable.put("table_name", queriedTable);
+					noPrivResult.add(noPrivTable);
+				}
+			} else {
+				//压根儿不是机密数据的话，直接跳过
+				continue;
+			}
+		}
+		
+		//检查完数据权限后，汇总一下发给前端
+		if (noPrivResult.size() >= 1) {
+			//更新状态
+			this.queryHistoryService.updateQueryHistoryStatus(queryHistId, QueryHistoryStatusEnum.ERROR);
+			
+			restfulResult.put("status", 3);
+			restfulResult.put("message", "用户SQL中查询到的以下数据表为机密表，而且您没有权限查询，需要联系管理员申请权限!");
+			restfulResult.put("data", noPrivResult);
+			return restfulResult;
+		}
+		
+		//最后都通过后发送到hive server执行
 		Map<String, Object> serviceResult = this.hiveServerService.executeHiveSqlQuery(queryContent, this.getLoginUser(request), queryHistId, emailNotify);
 		
 		return this.encodeToJsonResult(serviceResult);
@@ -149,13 +242,4 @@ public class HiveQueryController extends BaseController{
 		return this.encodeToJsonResult(serviceResult);
 	}
 	
-	@RequestMapping(value = "/test1.json", method = RequestMethod.GET)
-	public int test1(HttpServletRequest request) {
-		try {
-			this.eu.sendAttachmentsMail("jialiyang@baijiahulian.com", "多个邮件123", "我们都是中国人\n哈哈\t有一个空格\nover.", new String[]{"d:\\tmp\\jialiyang-101.txt", "d:\\tmp\\jialiyang-100.meta", "d:\\tmp\\jialiyang-102.txt"});
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return 1;
-	}
 }

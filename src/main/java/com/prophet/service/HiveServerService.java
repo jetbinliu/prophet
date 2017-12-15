@@ -12,6 +12,7 @@ import com.prophet.dao.HiveServerDao;
 import com.prophet.dao.QueryHistoryDao;
 import com.prophet.common.QueryHistoryStatusEnum;
 
+
 @Service
 public class HiveServerService extends BaseService{
 	private HiveServerDao hiveServerDao;

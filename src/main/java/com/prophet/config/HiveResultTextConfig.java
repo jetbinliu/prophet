@@ -3,7 +3,8 @@ package com.prophet.config;
 public class HiveResultTextConfig {
 	
 	private final static String HIVE_RESULT_FILE_DIR		= "data/";
-	public final static String HIVE_RESULT_FIELD_DELIMITER 	= "##@@#";
+	//public final static String HIVE_RESULT_FIELD_DELIMITER 	= "##@@#";
+	public final static String HIVE_RESULT_FIELD_DELIMITER 	= "\001";		//hive默认列分隔符^A的八进制编码
 	
 	/**
 	 * 获取数据文件绝对路径

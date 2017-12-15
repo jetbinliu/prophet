@@ -1,5 +1,6 @@
 package prophet;
 import java.io.File;
+import java.util.StringTokenizer;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import com.prophet.common.ThreadExecutor;
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.ql.parse.ParseDriver;
 
 public class Test01 implements Callable<String>{
 	private int a = 10;
@@ -31,7 +33,10 @@ public class Test01 implements Callable<String>{
 	}
 	
 	public static void main(String[] args) {
-		File f = new File("d:\\tmp\\aaa.txt");
+		String a = "ab.ee";
+		String[] c= a.split("\\.");
+		String b = java.util.Arrays.toString(c);
+		System.out.println(b);
 	}
 
 }
