@@ -20,4 +20,10 @@ public class HiveSecretUserPrivsDao {
 		Object[] args = {username, tableSchema, tableName};
 		return jdbcTemplate.queryForList(sql, args);
 	}
+	
+	public int insertOneUserSecretPriv(String username, int hiveSecretTableId) {
+		String sql = "insert into hive_secret_user_privs(hive_secret_table_id,username) values(?,?)";
+		Object[] args = {hiveSecretTableId, username};
+		return this.jdbcTemplate.update(sql, args);
+	}
 }

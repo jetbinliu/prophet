@@ -9,11 +9,14 @@ import org.springframework.stereotype.Service;
 
 import com.prophet.dao.HiveSecretTableDao;
 import com.prophet.dao.HiveSecretUserPrivsDao;
+import com.prophet.domain.HiveSecretTable;
+import com.prophet.dao.HiveMetaStoreDao;
 
 @Service
 public class HiveSecretDataService extends BaseService{
 	private HiveSecretTableDao hiveSecretTableDao;
 	private HiveSecretUserPrivsDao hiveSecretUserPrivsDao;
+	private HiveMetaStoreDao hiveMetaStoreDao;
 	
 	@Autowired
 	public void setHiveSecretTableDao(HiveSecretTableDao hiveSecretTableDao) {
@@ -23,6 +26,11 @@ public class HiveSecretDataService extends BaseService{
 	@Autowired
 	public void setHiveSecretUserPrivsDao(HiveSecretUserPrivsDao hiveSecretUserPrivsDao) {
 		this.hiveSecretUserPrivsDao = hiveSecretUserPrivsDao;
+	}
+
+	@Autowired
+	public void setHiveMetaStoreDao(HiveMetaStoreDao hiveMetaStoreDao) {
+		this.hiveMetaStoreDao = hiveMetaStoreDao;
 	}
 
 	/**
@@ -92,6 +100,84 @@ public class HiveSecretDataService extends BaseService{
 			serviceResult.put("msg", ex.getMessage());
 		}
 		serviceResult.put("data", dbTableResult);
+		return serviceResult;
+	}
+	
+	public Map<String, Object> getAllNonSecretTables() {
+		Map<String, Object> serviceResult = this.initServiceResult();
+		List<Map<String, Object>> nonSecretTables = null;
+		try {
+			nonSecretTables = this.hiveSecretTableDao.getAllNonSecretTables();
+			
+		} catch (Exception ex) {
+			serviceResult.put("msg", ex.getMessage());
+		}
+		serviceResult.put("data", nonSecretTables);
+		return serviceResult;
+	}
+	
+	/**
+	 * 增加机密数据表
+	 * @param targetSecretTables
+	 * @return
+	 */
+	public Map<String, Object> addSecretTables(List<String> targetSecretTables) {
+		Map<String, Object> serviceResult = this.initServiceResult();
+		int data = 1;
+		List<HiveSecretTable> secretTables = new ArrayList<HiveSecretTable>();
+		for (String dbAndTable : targetSecretTables) {
+			String[] s = dbAndTable.split("\\.");
+			HiveSecretTable h = new HiveSecretTable();
+			h.setTableSchema(s[0]);
+			h.setTableName(s[1]);
+			secretTables.add(h);
+		}
+		try {
+			this.hiveSecretTableDao.addSecretTables(secretTables);
+			
+		} catch (Exception ex) {
+			serviceResult.put("msg", ex.getMessage());
+			data = -1;
+		}
+		serviceResult.put("data", data);
+		return serviceResult;
+	}
+	
+	/**
+	 * 获取所有机密表
+	 * @return
+	 */
+	public Map<String, Object> getAllSecretTables() {
+		Map<String, Object> serviceResult = this.initServiceResult();
+		List<Map<String, Object>> daoResult = null;
+		
+		try {
+			daoResult = this.hiveSecretTableDao.getAllSecretTables();
+			
+		} catch (Exception ex) {
+			serviceResult.put("msg", ex.getMessage());
+		}
+		serviceResult.put("data", daoResult);
+		return serviceResult;
+	}
+	
+	/**
+	 * 给用户批量授权机密表权限
+	 * @param username
+	 * @param secretTableIds
+	 * @return
+	 */
+	public Map<String, Object> grantSecretPrivToUser(String username, List<Integer> secretTableIds) {
+		Map<String, Object> serviceResult = this.initServiceResult();
+		try {
+			for (Integer id : secretTableIds) {
+				this.hiveSecretUserPrivsDao.insertOneUserSecretPriv(username, id);
+			}
+			
+		} catch (Exception ex) {
+			serviceResult.put("msg", ex.getMessage());
+		}
+		serviceResult.put("data", null);
 		return serviceResult;
 	}
 	

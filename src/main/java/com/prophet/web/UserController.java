@@ -14,16 +14,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.prophet.service.HiveMetaStoreService;
-import com.prophet.service.HiveServerService;
-import com.prophet.service.QueryHistoryService;
 import com.prophet.service.UserAuthService;
 
-import com.prophet.web.postparameters.HiveQueryCommand;
 
 @RestController
 public class UserController extends BaseController{
 	private UserAuthService userAuthService;
+	
 	
 	final static Logger logger = LoggerFactory.getLogger(UserController.class);
 
@@ -46,7 +43,17 @@ public class UserController extends BaseController{
 		if ((int)(serviceResult.get("data")) == 0) {
 			//认证成功，则登录
 			HttpSession session = request.getSession();
+			//检查该用户是否为admin并设置session
+			int isAdmin = -1;
+			if (this.userAuthService.isAdmin(username) == true) {
+				isAdmin = 1;
+			} else {
+				isAdmin = 0;
+			}
+			session.setAttribute("userAuthSystemType", this.userAuthService.getUserAuthSystemType());
+			session.setAttribute("isAdmin", isAdmin);
 			session.setAttribute("loginedUser", username);
+			
 		}
 		
 		return this.encodeToJsonResult(serviceResult);
@@ -64,8 +71,11 @@ public class UserController extends BaseController{
 		HttpSession session = request.getSession();
 		if (session.getAttribute("loginedUser") != null) {
 			session.removeAttribute("loginedUser");
-			session.invalidate();
 		}
+		if (session.getAttribute("isAdmin") != null) {
+			session.removeAttribute("isAdmin");
+		}
+		session.invalidate();
 		
 		controllerResult.put("status", 0);
 		controllerResult.put("message", "ok");
@@ -82,10 +92,52 @@ public class UserController extends BaseController{
 	@RequestMapping(value = "/get_login_user.json", method = RequestMethod.GET)
 	public Map<String, Object> currLoginUserController(HttpServletRequest request) {
 		Map<String, Object> controllerResult = new HashMap<String, Object>();
+		Map<String, Object> data = new HashMap<String, Object>();
 		controllerResult.put("status", 0);
 		controllerResult.put("message", "ok");
-		controllerResult.put("data", this.getLoginUser(request));
+		if (this.getLoginUserInfo(request) != null) {
+			data.put("isAdmin", this.getLoginUserInfo(request).get("isAdmin"));
+			data.put("loginedUser", this.getLoginUserInfo(request).get("loginedUser"));
+			data.put("userAuthSystemType", this.getLoginUserInfo(request).get("userAuthSystemType"));
+			controllerResult.put("data", this.getLoginUserInfo(request));
+		}
 		return controllerResult;
 	}
 	
+	@RequestMapping(value = "/get_all_prophet_users.json", method = RequestMethod.GET)
+	public Map<String, Object> getAllProphetUsersController(HttpServletRequest request) {
+		Map<String, Object> loginUserInfo = this.getLoginUserInfo(request);
+		if (
+				loginUserInfo.get("isAdmin").toString().equals("0") || 
+				!loginUserInfo.get("userAuthSystemType").toString().equals("prophet")
+			) {
+			Map<String, Object> restfulResult = new HashMap<String, Object>();
+			restfulResult.put("status", 1);
+			restfulResult.put("message", "用户非管理员，或userAuthSystemType不是prophet，请求出错!");
+			restfulResult.put("data", null);
+			return restfulResult;
+		}
+		return this.encodeToJsonResult(this.userAuthService.getAllProphetUsers());
+	}
+	
+	@RequestMapping(value = "/add_prophet_user.json", method = RequestMethod.POST)
+	public Map<String, Object> addProphetUserController(HttpServletRequest request,
+			@RequestParam("username") String username, 
+			@RequestParam("password") String password,
+			@RequestParam("isActive") String isActive,
+			@RequestParam("userType") String userType
+			) {
+		Map<String, Object> loginUserInfo = this.getLoginUserInfo(request);
+		if (
+				loginUserInfo.get("isAdmin").toString().equals("0") || 
+				!loginUserInfo.get("userAuthSystemType").toString().equals("prophet")
+			) {
+			Map<String, Object> restfulResult = new HashMap<String, Object>();
+			restfulResult.put("status", 1);
+			restfulResult.put("message", "用户非管理员，或userAuthSystemType不是prophet，请求出错!");
+			restfulResult.put("data", null);
+			return restfulResult;
+		}
+		return this.encodeToJsonResult(this.userAuthService.addProphetUser(username, password, isActive, userType));
+	}
 }

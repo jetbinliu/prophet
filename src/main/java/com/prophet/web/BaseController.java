@@ -26,7 +26,7 @@ public class BaseController {
 	}
 	
 	/**
-	 * 方法重载：将数据封装成json格式作为RESTFUL接口返回给前端
+	 * 方法重载1：将数据封装成json格式作为RESTFUL接口返回给前端
 	 * @param data
 	 * @return Map<String, Object> restfulResult
 	 */
@@ -39,16 +39,29 @@ public class BaseController {
 	}
 	
 	/**
-	 * 获取当前session里登录的用户名
+	 * 获取当前session里登录的用户信息
 	 * @param request
-	 * @return
+	 * @return Map
 	 */
-	protected String getLoginUser(HttpServletRequest request) {
+	protected Map<String, Object> getLoginUserInfo(HttpServletRequest request) {
+		Map<String, Object> result = new HashMap<String, Object>();
 		HttpSession session = request.getSession();
-		if (session == null || session.getAttribute("loginedUser") == null) {
-			return null;
+		String username = "";
+		String isAdmin = "";
+		if (
+				session == null || 
+				session.getAttribute("loginedUser") == null ||
+				session.getAttribute("isAdmin") == null
+			) {
+			username = "匿名用户";
+			isAdmin = "0";
 		} else {
-			return session.getAttribute("loginedUser").toString();
+			username = session.getAttribute("loginedUser").toString();
+			isAdmin = session.getAttribute("isAdmin").toString();
 		}
+		result.put("loginedUser", username);
+		result.put("isAdmin", isAdmin);
+		result.put("userAuthSystemType", session.getAttribute("userAuthSystemType"));
+		return result;
 	}
 }

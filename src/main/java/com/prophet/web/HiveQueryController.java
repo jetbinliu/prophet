@@ -160,7 +160,7 @@ public class HiveQueryController extends BaseController{
 			List<Map<String, Object>> daoSecretResult = this.hiveSecretDataService.checkIsSecretTable(queriedDb, queriedTable);
 			if (daoSecretResult.size() != 0) {
 				//判断是机密数据的话，去检查该用户是否对其有权限
-				if (this.hiveSecretDataService.checkPrivilege(this.getLoginUser(request), queriedDb, queriedTable)) {
+				if (this.hiveSecretDataService.checkPrivilege(this.getLoginUserInfo(request).get("loginedUser").toString(), queriedDb, queriedTable)) {
 					continue;
 				} else {
 					//该用户没有权限则提示没有该表权限
@@ -188,8 +188,8 @@ public class HiveQueryController extends BaseController{
 		}
 		
 		//最后都通过后发送到hive server执行
-		Map<String, Object> serviceResult = this.hiveServerService.executeHiveSqlQuery(queryContent, this.getLoginUser(request), queryHistId, emailNotify);
-		
+		Map<String, Object> serviceResult = this.hiveServerService.executeHiveSqlQuery(queryContent, this.getLoginUserInfo(request).get("loginedUser").toString(), queryHistId, emailNotify);
+		hqlParser = null;
 		return this.encodeToJsonResult(serviceResult);
 	}
 	
@@ -204,7 +204,7 @@ public class HiveQueryController extends BaseController{
 		String queryContent = hiveQueryCommand.getQueryContent();
 		String strEmailNotify = hiveQueryCommand.getEmailNotify();
 		int emailNotify = strEmailNotify.equals("true") ? 1 : 0;
-		Map<String, Object> serviceResult = this.queryHistoryService.insertOneQueryHistory(queryContent, this.getLoginUser(request), emailNotify);
+		Map<String, Object> serviceResult = this.queryHistoryService.insertOneQueryHistory(queryContent, this.getLoginUserInfo(request).get("loginedUser").toString(), emailNotify);
 		return this.encodeToJsonResult(serviceResult);
 	}
 	
@@ -215,7 +215,7 @@ public class HiveQueryController extends BaseController{
 	 */
 	@RequestMapping(value = "/hive_query/get_query_history.json", method = RequestMethod.GET)
 	public Map<String, Object> getAllQueryHistoryController(HttpServletRequest request) {
-		Map<String, Object> serviceResult = this.queryHistoryService.getAllQueryHistoryByUser(this.getLoginUser(request));
+		Map<String, Object> serviceResult = this.queryHistoryService.getAllQueryHistoryByUser(this.getLoginUserInfo(request).get("loginedUser").toString());
 		return this.encodeToJsonResult(serviceResult);
 	}
 	
@@ -238,7 +238,7 @@ public class HiveQueryController extends BaseController{
 	 */
 	@RequestMapping(value = "/hive_query/get_history_result.json", method = RequestMethod.GET)
 	public Map<String, Object> getHistoryResultController(HttpServletRequest request, @RequestParam("queryHistId") long queryHistId) {
-		Map<String, Object> serviceResult = this.hiveServerService.getHistoryResultFromDiskById(this.getLoginUser(request), queryHistId);
+		Map<String, Object> serviceResult = this.hiveServerService.getHistoryResultFromDiskById(this.getLoginUserInfo(request).get("loginedUser").toString(), queryHistId);
 		return this.encodeToJsonResult(serviceResult);
 	}
 	

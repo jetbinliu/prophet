@@ -1,11 +1,17 @@
 package com.prophet.service;
 
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.prophet.dao.UserAuthLdapDao;
+import com.prophet.dao.UserAuthProphetDao;
+import com.prophet.dao.AdminDao;
 import com.prophet.interfaces.UserAuthDaoInterface;
 
 @Service
@@ -30,6 +36,17 @@ public class UserAuthService extends BaseService{
 	@Value("${authentication.ldap.security-credenticials}")
 	private String LDAP_SECURITY_CREDENTIALS;
 	
+	private AdminDao adminDao;
+	
+	@Autowired
+	@Qualifier("prophetJdbcTemplate")
+	private JdbcTemplate jdbcTemplateProphet;
+	
+	@Autowired
+	public void setAdminDao(AdminDao adminDao) {
+		this.adminDao = adminDao;
+	}
+
 	public UserAuthService() {
 		
 	}
@@ -60,6 +77,13 @@ public class UserAuthService extends BaseService{
 				}
 				break;
 			case "prophet":
+				if (userAuthDao == null) {
+					synchronized(UserAuthService.class) {
+						if (userAuthDao == null) {
+							userAuthDao = new UserAuthProphetDao(this.jdbcTemplateProphet);
+						}
+					}
+				}
 				break;
 		}
 		return userAuthDao;
@@ -92,5 +116,77 @@ public class UserAuthService extends BaseService{
 	 */
 	private boolean validateConfig(String authSystemType) {
 		return true;
+	}
+	
+	/**
+	 * 检查某个用户是否是admin
+	 * @param username
+	 * @return
+	 */
+	public boolean isAdmin(String username) {
+		return (this.adminDao.checkIsAdmin(username).size() == 0) ? false : true;
+	}
+	
+	/**
+	 * 检查用户系统里是否存在某个用户
+	 * @param username
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean hasUser(String username) throws Exception {
+		return this.getUserAuthDao().hasUser(username);
+	}
+	
+	/**
+	 * 获取用户认证系统的类型
+	 * @return
+	 */
+	public String getUserAuthSystemType() {
+		return this.authSystemType;
+	}
+	
+	/**
+	 * 在使用了prophet内置用户系统情况下，获取所有用户的信息
+	 * @return
+	 */
+	public Map<String, Object> getAllProphetUsers() {
+		Map<String, Object> serviceResult = this.initServiceResult();
+		List<Map<String, Object>> daoResult = null;
+		try {
+			if (this.authSystemType.toLowerCase().equals("prophet")) {
+				daoResult = ((UserAuthProphetDao)this.getUserAuthDao()).getAllProphetUsers();
+			}
+		} catch (Exception ex) {
+			serviceResult.put("msg", ex.getMessage());
+		}
+		serviceResult.put("data", daoResult);
+		return serviceResult;
+	}
+	
+	/**
+	 * 增加一个prophet user
+	 * @param username
+	 * @param password
+	 * @param isActive
+	 * @param userType
+	 * @return
+	 */
+	public Map<String, Object> addProphetUser(String username, String password, String isActive, String userType) {
+		Map<String, Object> serviceResult = this.initServiceResult();
+		int daoResult = -1;
+		try {
+			//如果是admin则向admin表里插入一个
+			if (userType.equals("admin")) {
+				this.adminDao.insertOneAdmin(username);
+			}
+			
+			if (this.authSystemType.toLowerCase().equals("prophet")) {
+				daoResult = ((UserAuthProphetDao)this.getUserAuthDao()).addProphetUser(username, password, isActive, userType);
+			}
+		} catch (Exception ex) {
+			serviceResult.put("msg", ex.getMessage());
+		}
+		serviceResult.put("data", daoResult);
+		return serviceResult;
 	}
 }

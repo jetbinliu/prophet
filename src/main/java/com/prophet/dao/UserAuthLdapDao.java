@@ -163,6 +163,11 @@ public class UserAuthLdapDao implements UserAuthDaoInterface{
 		closeContext();
 		return result;
 	}
+	
+	@Override
+	public boolean hasUser(String UID) {
+		return this.getUserDN(UID).equals("") == true ? false : true;
+	}
 
 	/**
 	 * 向LDAP增加用户，暂未用到
