@@ -88,13 +88,25 @@ public class HiveServerService extends BaseService{
 	 * 从磁盘上获取某个查询的历史结果
 	 * @param username
 	 * @param queryHistId
-	 * @return
+	 * @return serviceResult：
+	 * 	"msg":"ok",
+	 *  "data":
+	 * 		{
+	 * 		"type":"sql_query",
+	 * 		"data":{
+	 * 			"result_cols":[],
+	 * 			"result_data":[]
+	 * 			},
+	 * 		"size":300
+	 * 		}
 	 */
-	public Map<String, Object> getHistoryResultFromDiskById(String username, long queryHistId) {
+	public Map<String, Object> getHistoryResultFromDiskById(String username, long queryHistId, int pageNo) {
 		Map<String, Object> serviceResult = this.initServiceResult();
 		Map<String, Object> daoResult = null;
 		try {
-			daoResult = this.hiveServerDao.getResultFromDiskById(username, queryHistId);
+			daoResult = this.hiveServerDao.getResultFromDiskByIdByPage(username, queryHistId, pageNo, HiveServerDao.PAGE_ROWS);
+			int resultSize = this.queryHistoryDao.getQueryHistoryById(queryHistId).getResultSize();
+			daoResult.put("size", resultSize);
 		} catch (Exception ex) {
 			serviceResult.put("msg", ex.getMessage());
 		}

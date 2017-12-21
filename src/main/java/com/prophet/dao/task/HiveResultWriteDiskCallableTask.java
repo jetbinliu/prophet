@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.io.FileUtils;
 
@@ -15,7 +16,7 @@ import org.apache.commons.io.FileUtils;
  * 开启线程将hive查询结果写入磁盘 
  *
  */
-public class HiveResultWriteDiskRunnableTask implements Runnable{
+public class HiveResultWriteDiskCallableTask implements Callable<Boolean>{
 	private List<Map<String, Object>> hiveData;
 	private Set<String> hiveCols;
 	private String username;
@@ -54,7 +55,9 @@ public class HiveResultWriteDiskRunnableTask implements Runnable{
 	}
 
 	@Override
-	public void run() {
+	public Boolean call() {
+		Boolean isFinished = true;
+		
 		final String dataFileName = com.prophet.config.HiveResultTextConfig.getDataFileName(this.username, this.queryHistId);
 		final String metaFileName = com.prophet.config.HiveResultTextConfig.getMetaFileName(this.username, this.queryHistId);
 		
@@ -90,8 +93,10 @@ public class HiveResultWriteDiskRunnableTask implements Runnable{
 			FileUtils.writeLines(new File(dataFileName), "UTF-8", diskResult);
 			FileUtils.writeStringToFile(new File(metaFileName), strCols.toString(), "UTF-8");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			isFinished = false;
 		}
+		return isFinished;
 	}
+
 }

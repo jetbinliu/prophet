@@ -46,7 +46,7 @@ public class HiveServerCallableTask implements Callable<Map<String, Object>>{
 	 * 		"type":"sql_query",
 	 * 		"data":{
 	 * 			"result_cols":[],
-	 * 			"result_data":[]
+	 * 			"result_data":[],
 	 * 		}
 	 * 	}
 	 * }
@@ -63,7 +63,7 @@ public class HiveServerCallableTask implements Callable<Map<String, Object>>{
 		dataWithType.put("data", null);
 		
 		List<Map<String, Object>> hiveResult = null;
-		//先查询数据库
+		//先查询hive
 		try {
 			
 			hiveResult = this.jdbcTemplate.queryForList(this.queryContent);

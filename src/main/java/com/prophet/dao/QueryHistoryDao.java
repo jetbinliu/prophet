@@ -111,7 +111,7 @@ public class QueryHistoryDao {
 	 * @return
 	 */
 	public QueryHistory getQueryHistoryById(long id) {
-		String sql = "select id, query_time, query_content, status, username, email_notify from query_history where id=?";
+		String sql = "select id, query_time, query_content, status, username, email_notify, result_size from query_history where id=?";
 		Object[] args = {id};
 		QueryHistory q = new QueryHistory();
 		this.jdbcTemplate.query(sql, args, new RowCallbackHandler(){
@@ -129,9 +129,22 @@ public class QueryHistoryDao {
 				}
 				q.setUsername(rs.getString("username"));
 				q.setEmailNotify(rs.getInt("email_notify"));
+				q.setResultSize(rs.getInt("result_size"));
 			}
 			
 		});
 		return q;
+	}
+	
+	/**
+	 * 保存结果集行数
+	 * @param queryHistId
+	 * @param resultSize
+	 * @return
+	 */
+	public int saveResultSizeById(long queryHistId, int resultSize) {
+		String sql = "update query_history set result_size=? where id=?";
+		Object[] args = new Object[]{resultSize, queryHistId};
+		return this.jdbcTemplate.update(sql, args);
 	}
 }

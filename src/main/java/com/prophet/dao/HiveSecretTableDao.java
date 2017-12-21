@@ -35,9 +35,10 @@ public class HiveSecretTableDao {
 	 * @return
 	 */
 	public List<Map<String, Object>> getAllSecretTablesByUser(String username) {
+		//注意这里是b.username是在on里不是在where，这样才能在join时就把数据连接出来
 		String sql = "select a.id as table_id, a.table_schema, a.table_name, if(b.username=?,'您已具有查询权限',null) as info "
-				+ "from hive_secret_tables a left join hive_secret_user_privs b on a.id=b.hive_secret_table_id ";
-		Object[] args = {username};
+				+ "from hive_secret_tables a left join hive_secret_user_privs b on a.id=b.hive_secret_table_id and b.username=? ";
+		Object[] args = {username, username};
 		return jdbcTemplateProphet.queryForList(sql, args);
 	}
 	
@@ -53,11 +54,15 @@ public class HiveSecretTableDao {
 		StringBuffer sqlMetastore = new StringBuffer("select DBS.NAME as DB_NAME,TBLS.TBL_ID,TBLS.TBL_NAME,TBLS.TBL_TYPE from TBLS,DBS "
 				+ "where TBLS.DB_ID=DBS.DB_ID and (DBS.NAME,TBLS.TBL_NAME) not in (" );
 
-		for (int i = 0; i < secretTables.size(); i++) {
-			if (i != 0) {
-				sqlMetastore.append(",");
+		if (secretTables.size() == 0) {
+			sqlMetastore.append("('','')");
+		} else {
+			for (int i = 0; i < secretTables.size(); i++) {
+				if (i != 0) {
+					sqlMetastore.append(",");
+				}
+				sqlMetastore.append(String.format("('%s','%s')", secretTables.get(i).get("table_schema").toString(), secretTables.get(i).get("table_name").toString()));
 			}
-			sqlMetastore.append(String.format("('%s','%s')", secretTables.get(i).get("table_schema").toString(), secretTables.get(i).get("table_name").toString()));
 		}
 		sqlMetastore.append(") order by DBS.NAME,TBLS.TBL_NAME");
 		

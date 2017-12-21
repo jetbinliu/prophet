@@ -1,18 +1,34 @@
 package com.prophet.web;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,6 +205,7 @@ public class HiveQueryController extends BaseController{
 		
 		//最后都通过后发送到hive server执行
 		Map<String, Object> serviceResult = this.hiveServerService.executeHiveSqlQuery(queryContent, this.getLoginUserInfo(request).get("loginedUser").toString(), queryHistId, emailNotify);
+		//回收解析器对象
 		hqlParser = null;
 		return this.encodeToJsonResult(serviceResult);
 	}
@@ -237,9 +254,67 @@ public class HiveQueryController extends BaseController{
 	 * @return
 	 */
 	@RequestMapping(value = "/hive_query/get_history_result.json", method = RequestMethod.GET)
-	public Map<String, Object> getHistoryResultController(HttpServletRequest request, @RequestParam("queryHistId") long queryHistId) {
-		Map<String, Object> serviceResult = this.hiveServerService.getHistoryResultFromDiskById(this.getLoginUserInfo(request).get("loginedUser").toString(), queryHistId);
+	public Map<String, Object> getHistoryResultController(HttpServletRequest request, 
+							@RequestParam("queryHistId") long queryHistId,
+							@RequestParam("pageNo") int pageNo
+				) {
+		Map<String, Object> serviceResult = this.hiveServerService.getHistoryResultFromDiskById(this.getLoginUserInfo(request).get("loginedUser").toString(), queryHistId, pageNo);
 		return this.encodeToJsonResult(serviceResult);
 	}
 	
+	/**
+	 * 结果集下载
+	 * @param request
+	 * @param response
+	 */
+	@RequestMapping(value = "/hive_query/get_csv.json", method = RequestMethod.GET)
+	public void getDownload(HttpServletRequest request, HttpServletResponse response, @RequestParam("queryHistId") long queryHistId) {  
+        //找到文件
+        String filename = com.prophet.config.HiveResultTextConfig.getDataFileName(this.getLoginUserInfo(request).get("loginedUser").toString(), queryHistId);
+        File file = new File(filename);
+        if (!file.exists()) {
+        	logger.error(String.format("数据文件%s不存在!", filename));
+        } else {
+        	//将文件解析成csv格式
+        	LineIterator iter = null;
+        	PrintWriter writer = null;
+        	try {
+        		iter = FileUtils.lineIterator(file, "UTF-8");
+        		
+                response.setContentType("application/octet-stream;charset=gbk");
+                
+                String headerValue = String.format("attachment; filename=\"%s\"", String.format("data-%s.csv", com.prophet.util.DateTimeUtil.getNow()));
+                response.setHeader("Content-Disposition", headerValue);
+                response.setCharacterEncoding("GBK");
+                
+                //这里用PrintWriter而不用ServletOutputStream是因为后者无法处理中文等unicode字符集
+                writer = response.getWriter();
+                
+        		while (iter.hasNext()) {
+        			StringBuffer newLine = new StringBuffer("");
+        			String line = iter.nextLine();
+        			String[] fields = line.split(com.prophet.config.HiveResultTextConfig.HIVE_RESULT_FIELD_DELIMITER);
+        			for (int i = 0 ; i < fields.length ; i ++) {
+        				newLine.append(fields[i]);
+        				if (i != fields.length-1) {
+        					newLine.append(",");
+        				}
+        			}
+        			writer.println(newLine.toString());
+        		}
+        		writer.flush();
+        		
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				LineIterator.closeQuietly(iter);
+				writer.close();
+				try {
+					response.flushBuffer();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+        }
+    }  
 }

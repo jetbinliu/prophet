@@ -77,4 +77,5 @@ public class QueryHistoryService extends BaseService{
 		this.queryHistoryDao.updateQueryHistoryStatus(queryHistId, 
 				status.getIndex());
 	}
+	
 }

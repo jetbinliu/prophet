@@ -12,6 +12,7 @@ public class QueryHistory {
 	private String strStatus;
 	private String username;
 	private int emailNotify;
+	private int resultSize;
 	
 	public long getId() {
 		return id;
@@ -54,6 +55,12 @@ public class QueryHistory {
 	}
 	public void setEmailNotify(int emailNotify) {
 		this.emailNotify = emailNotify;
+	}
+	public int getResultSize() {
+		return resultSize;
+	}
+	public void setResultSize(int resultSize) {
+		this.resultSize = resultSize;
 	}
 	
 }
