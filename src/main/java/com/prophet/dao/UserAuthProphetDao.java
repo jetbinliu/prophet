@@ -50,4 +50,10 @@ public class UserAuthProphetDao implements UserAuthDaoInterface{
 		Object[] args = {username, Encryptor.encryptSHA(password), active, userType};
 		return this.jdbcTemplate.update(sql, args);
 	}
+	
+	public void deleteUserById(int userId) {
+		String sql = "delete from prophet_users where id=?";
+		Object[] args = {userId};
+		this.jdbcTemplate.update(sql, args);
+	}
 }

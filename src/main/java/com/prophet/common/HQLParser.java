@@ -39,7 +39,12 @@ public class HQLParser {
 		return cols;
 	}
 	public Set<String> getTables() {
-		return tables;
+		Set<String> newTables = new HashSet<String>();
+		//去掉default12.`user`里的``
+		for (String t : this.tables) {
+			newTables.add(t.replaceAll("`", ""));
+		}
+		return newTables;
 	}
 	public String getOper() {
 		return oper.toString();

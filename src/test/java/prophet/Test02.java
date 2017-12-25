@@ -6,23 +6,22 @@ import java.lang.ThreadGroup;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
-import com.prophet.common.Encryptor;
+import java.util.Map;
 
-public class Test02 extends Test01{
-	private int a;
-	
-	public Test02() {
-		super();
-		this.a = 30;
+import com.prophet.common.Encryptor;
+import java.lang.Thread;
+
+public class Test02{
+	public int a = 10;
+	public static Map<String, Test02> h = new HashMap<String, Test02>(); 
+	public void test1() {
+		Test02.h.get("t").a = 20; 
+		System.out.println(h.get("t").a);
+		System.out.println(h.get("t").hashCode());
 	}
 
 	public static void main(String[] args) {
-		try {
-	        System.out.println(Encryptor.encryptMD5("hello world的发"));
-	        System.out.println(Encryptor.encryptSHA("213456"));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		
 	}
 
 }

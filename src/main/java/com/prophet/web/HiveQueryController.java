@@ -1,9 +1,7 @@
 package com.prophet.web;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -37,6 +33,8 @@ import com.prophet.service.HiveServerService;
 import com.prophet.service.QueryHistoryService;
 import com.prophet.service.HiveSecretDataService;
 import com.prophet.web.postparameters.HiveQueryCommand;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.prophet.common.HQLParser;
 import com.prophet.common.QueryHistoryStatusEnum;
 
@@ -95,7 +93,8 @@ public class HiveQueryController extends BaseController{
 	}
 	
 	/**
-	 * 向hiveserver发送SQL语句请求，需要经过高危过滤、权限验证等前置检验
+	 * 向hiveserver发送SQL语句请求，需要经过高危过滤、权限验证等前置检验，并将结果保存在磁盘，状态、消息等入库。
+	 * 前端需要定时异步轮询获取状态和结果
 	 * @param request
 	 * @param hiveQueryCommand
 	 */
@@ -117,10 +116,11 @@ public class HiveQueryController extends BaseController{
 			hqlParser.parseHQL(queryContent);
 		} catch (Exception ex) {
 			//更新状态
-			this.queryHistoryService.updateQueryHistoryStatus(queryHistId, QueryHistoryStatusEnum.ERROR);
+			String message = ex.getMessage() + "\tCaused by: " + ex.getCause();
+			this.queryHistoryService.updateQueryHistoryStatusAndMsg(queryHistId, QueryHistoryStatusEnum.ERROR, message);
 			
 			restfulResult.put("status", 1);
-			restfulResult.put("message", ex.getMessage() + "\tCaused by: " + ex.getCause());
+			restfulResult.put("message", message);
 			restfulResult.put("data", null);
 			return restfulResult;
 		}
@@ -132,11 +132,11 @@ public class HiveQueryController extends BaseController{
 			 queriedTables = hqlParser.getTables();
 		} catch (Exception ex) {
 			//更新状态
-			this.queryHistoryService.updateQueryHistoryStatus(queryHistId, QueryHistoryStatusEnum.ERROR);
-			
+			String message = "该SQL语句类型不支持!";
 			restfulResult.put("status", 1);
-			restfulResult.put("message", "该SQL语句类型不支持!");
+			restfulResult.put("message", message);
 			restfulResult.put("data", null);
+			this.queryHistoryService.updateQueryHistoryStatusAndMsg(queryHistId, QueryHistoryStatusEnum.ERROR, message);
 			return restfulResult;
 		}
 			
@@ -146,11 +146,11 @@ public class HiveQueryController extends BaseController{
 			) {
 			
 			//更新状态
-			this.queryHistoryService.updateQueryHistoryStatus(queryHistId, QueryHistoryStatusEnum.ERROR);
-			
+			String message = "INSERT、DROP、TRUNCATE、LOAD、CREATETABLE、ALTER、CREATEDATABASE、DROPDATABASE等高危语句不运行执行!";
 			restfulResult.put("status", 1);
-			restfulResult.put("message", "INSERT、DROP、TRUNCATE、LOAD、CREATETABLE、ALTER、CREATEDATABASE、DROPDATABASE等高危语句不运行执行!");
+			restfulResult.put("message", message);
 			restfulResult.put("data", null);
+			this.queryHistoryService.updateQueryHistoryStatusAndMsg(queryHistId, QueryHistoryStatusEnum.ERROR, message);
 			return restfulResult;
 		} 
 		
@@ -161,9 +161,11 @@ public class HiveQueryController extends BaseController{
 			if (queriedTable.contains(".")) {
 				String[] dbAndTable = queriedTable.split("\\.");			//java里点号分割的正则必须是\\.
 				if (dbAndTable.length != 2) {
+					String message = String.format("SQL语句%s表解析出来的db和table不对，请检查!", queriedTable);
 					restfulResult.put("status", 1);
-					restfulResult.put("message", String.format("SQL语句%s表解析出来的db和table不对，请检查!", queriedTable));
+					restfulResult.put("message", message);
 					restfulResult.put("data", null);
+					this.queryHistoryService.updateQueryHistoryStatusAndMsg(queryHistId, QueryHistoryStatusEnum.ERROR, message);
 					return restfulResult;
 				}
 				queriedDb = dbAndTable[0];
@@ -195,11 +197,19 @@ public class HiveQueryController extends BaseController{
 		//检查完数据权限后，汇总一下发给前端
 		if (noPrivResult.size() >= 1) {
 			//更新状态
-			this.queryHistoryService.updateQueryHistoryStatus(queryHistId, QueryHistoryStatusEnum.ERROR);
+			String jsonResult = "";
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				jsonResult = mapper.writeValueAsString(noPrivResult);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+			String message = "用户SQL中查询到的以下数据表为机密表，而且您没有权限查询，需要联系管理员申请权限!";
 			
 			restfulResult.put("status", 3);
-			restfulResult.put("message", "用户SQL中查询到的以下数据表为机密表，而且您没有权限查询，需要联系管理员申请权限!");
+			restfulResult.put("message", message);
 			restfulResult.put("data", noPrivResult);
+			this.queryHistoryService.updateQueryHistoryStatusAndMsg(queryHistId, QueryHistoryStatusEnum.ERROR, message + jsonResult);
 			return restfulResult;
 		}
 		
@@ -317,4 +327,19 @@ public class HiveQueryController extends BaseController{
 			}
         }
     }  
+	
+	/**
+	 * 手动取消某个任务
+	 * @param request
+	 * @param queryHistId
+	 * @return
+	 */
+	@RequestMapping(value = "/hive_query/cancel_task.json", method = RequestMethod.GET)
+	public Map<String, Object> cancelTaskController(HttpServletRequest request, 
+							@RequestParam("queryHistId") long queryHistId
+				) {
+		Map<String, Object> serviceResult = this.hiveServerService.cancelTaskById(this.getLoginUserInfo(request).get("loginedUser").toString(), queryHistId);
+		
+		return this.encodeToJsonResult(serviceResult);
+	}
 }

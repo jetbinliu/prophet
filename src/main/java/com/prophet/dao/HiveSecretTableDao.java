@@ -35,7 +35,14 @@ public class HiveSecretTableDao {
 	 * @return
 	 */
 	public List<Map<String, Object>> getAllSecretTablesByUser(String username) {
-		//注意这里是b.username是在on里不是在where，这样才能在join时就把数据连接出来
+		/*
+		 * 注意这里是b.username是在on里不是在where，这样才能在join时就把数据连接出来.
+		 * 因为在使用left jion时，on和where条件的区别如下：
+		 * 1、 on条件是在生成临时表时使用的条件，它不管on中的条件是否为真，都会返回左边表中的记录。
+		 * 2、where条件是在临时表生成好后，再对临时表进行过滤的条件。这时已经没有left join的含义（必须返回左边表的记录）了，条件不为真的就全部过滤掉。
+		 * 不管on上的条件是否为真都会返回left或right表中的记录，full则具有left和right的特性的并集。 而inner jion没这个特殊性，则条件放在on中和where中，返回的结果集是相同的。
+		 * 详见 https://www.cnblogs.com/fuge/archive/2011/12/26/2342576.html
+		 */
 		String sql = "select a.id as table_id, a.table_schema, a.table_name, if(b.username=?,'您已具有查询权限',null) as info "
 				+ "from hive_secret_tables a left join hive_secret_user_privs b on a.id=b.hive_secret_table_id and b.username=? ";
 		Object[] args = {username, username};

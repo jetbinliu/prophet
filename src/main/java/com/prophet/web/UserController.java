@@ -140,4 +140,20 @@ public class UserController extends BaseController{
 		}
 		return this.encodeToJsonResult(this.userAuthService.addProphetUser(username, password, isActive, userType));
 	}
+	
+	@RequestMapping(value = "/delete_user_by_id.json", method = RequestMethod.POST)
+	public Map<String, Object> deleteUserByIdController(HttpServletRequest request, @RequestParam("userId") int userId) {
+		Map<String, Object> loginUserInfo = this.getLoginUserInfo(request);
+		if (
+				loginUserInfo.get("isAdmin").toString().equals("0") || 
+				!loginUserInfo.get("userAuthSystemType").toString().equals("prophet")
+			) {
+			Map<String, Object> restfulResult = new HashMap<String, Object>();
+			restfulResult.put("status", 1);
+			restfulResult.put("message", "用户非管理员，或userAuthSystemType不是prophet，请求出错!");
+			restfulResult.put("data", null);
+			return restfulResult;
+		}
+		return this.encodeToJsonResult(this.userAuthService.deleteUserById(userId));
+	}
 }

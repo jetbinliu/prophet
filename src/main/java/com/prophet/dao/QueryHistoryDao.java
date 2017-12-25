@@ -94,14 +94,15 @@ public class QueryHistoryDao {
 	}
 	
 	/**
-	 * 更改查询历史记录状态值
+	 * 更改查询历史记录状态值和消息
 	 * @param id
 	 * @param status
+	 * @param message
 	 * @return
 	 */
-	public int updateQueryHistoryStatus(long id, int status) {
-		String sql = "update query_history set status=? where id=?";
-		Object[] args = {status, id};
+	public int updateQueryHistoryStatusAndMsg(long id, int status, String message) {
+		String sql = "update query_history set status=?,message=? where id=?";
+		Object[] args = {status, message,id};
 		return this.jdbcTemplate.update(sql, args);
 	}
 	
@@ -111,7 +112,7 @@ public class QueryHistoryDao {
 	 * @return
 	 */
 	public QueryHistory getQueryHistoryById(long id) {
-		String sql = "select id, query_time, query_content, status, username, email_notify, result_size from query_history where id=?";
+		String sql = "select id, query_time, query_content, status, username, email_notify, result_size, message from query_history where id=?";
 		Object[] args = {id};
 		QueryHistory q = new QueryHistory();
 		this.jdbcTemplate.query(sql, args, new RowCallbackHandler(){
@@ -130,6 +131,7 @@ public class QueryHistoryDao {
 				q.setUsername(rs.getString("username"));
 				q.setEmailNotify(rs.getInt("email_notify"));
 				q.setResultSize(rs.getInt("result_size"));
+				q.setMessage(rs.getString("message"));
 			}
 			
 		});

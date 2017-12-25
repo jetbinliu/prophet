@@ -73,9 +73,9 @@ public class QueryHistoryService extends BaseService{
 	 * @param queryHistId
 	 * @param status
 	 */
-	public void updateQueryHistoryStatus(long queryHistId, QueryHistoryStatusEnum status) {
-		this.queryHistoryDao.updateQueryHistoryStatus(queryHistId, 
-				status.getIndex());
+	public void updateQueryHistoryStatusAndMsg(long queryHistId, QueryHistoryStatusEnum status, String message) {
+		this.queryHistoryDao.updateQueryHistoryStatusAndMsg(queryHistId, 
+				status.getIndex(), message);
 	}
 	
 }

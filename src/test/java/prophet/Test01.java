@@ -2,6 +2,9 @@ package prophet;
 import java.io.File;
 import java.util.StringTokenizer;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import com.prophet.common.ThreadExecutor;
+import com.prophet.common.ThreadPool;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 
@@ -33,10 +36,12 @@ public class Test01 implements Callable<String>{
 	}
 	
 	public static void main(String[] args) {
-		String a = "ab.ee";
-		String[] c= a.split("\\.");
-		String b = java.util.Arrays.toString(c);
-		System.out.println(b);
+		Test02 t = new Test02();
+		Test02.h.put("t", t);
+		System.out.println(t.hashCode());
+		System.out.println(Test02.h.get("t").a);
+		
+		t.test1();
 	}
 
 }

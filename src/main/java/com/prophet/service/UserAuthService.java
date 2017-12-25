@@ -189,4 +189,19 @@ public class UserAuthService extends BaseService{
 		serviceResult.put("data", daoResult);
 		return serviceResult;
 	}
+	
+	public Map<String, Object> deleteUserById(int userId) {
+		Map<String, Object> serviceResult = this.initServiceResult();
+		int daoResult = -1;
+		try {
+			
+			if (this.authSystemType.toLowerCase().equals("prophet")) {
+				((UserAuthProphetDao)this.getUserAuthDao()).deleteUserById(userId);
+			}
+		} catch (Exception ex) {
+			serviceResult.put("msg", ex.getMessage());
+		}
+		serviceResult.put("data", daoResult);
+		return serviceResult;
+	}
 }
