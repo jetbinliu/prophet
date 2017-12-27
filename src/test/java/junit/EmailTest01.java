@@ -24,8 +24,8 @@ public class EmailTest01 {
 	@Test
 	public void sendSimpleMail() throws Exception {
 		SimpleMailMessage message = new SimpleMailMessage();
-		message.setFrom("164473279@qq.com");
-		message.setTo("jialiyang@baijiahulian.com");
+		message.setFrom("123@qq.com");
+		message.setTo("aa@cc.com");
 		message.setSubject("主题：简单邮件");
 		message.setText("测试邮件内容");
 
@@ -38,12 +38,12 @@ public class EmailTest01 {
 		MimeMessage mimeMessage = mailSender.createMimeMessage();
 
 		MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
-		helper.setFrom("dyc87112@qq.com");
-		helper.setTo("jialiyang@baijiahulian.com");
+		helper.setFrom("123@qq.com");
+		helper.setTo("aa@cc.com");
 		helper.setSubject("主题：有附件");
 		helper.setText("有附件的邮件");
 
-		FileSystemResource file = new FileSystemResource(new File("d:\\tmp\\jialiyang-101.txt"));
+		FileSystemResource file = new FileSystemResource(new File("bb.txt"));
 		helper.addAttachment("附件-1.txt", file);
 		helper.addAttachment("附件-2.txt", file);
 
