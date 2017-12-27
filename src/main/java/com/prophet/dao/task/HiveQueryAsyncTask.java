@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.prophet.common.QueryHistoryStatusEnum;
@@ -87,19 +88,19 @@ public class HiveQueryAsyncTask implements Runnable{
 			}
 			
 			//然后将结果写入disk
-			if (this._writeHiveResultToDisk(hiveResult, columnSet, username, queryHistId)) {
+			if (this._writeHiveResultToDisk(hiveResult, columnSet, username, this.queryHistId)) {
 				//一旦写入成功将结果集大小记录到db，并传给前端，方便分页
 				int resultSize = hiveResult.size();
-				this._saveResultSizeById(queryHistId, resultSize);
+				this._saveResultSizeById(this.queryHistId, resultSize);
 			}
 			
 			//执行到最后没有问题，则更新状态
 			this._updateQueryHistoryStatusAndMsg(this.queryHistId, 
 					QueryHistoryStatusEnum.FINISHED.getIndex(), "ok");
 		} catch (Exception ex) {
-			logger.error(ex.getMessage());
 			this._updateQueryHistoryStatusAndMsg(this.queryHistId, 
 					QueryHistoryStatusEnum.ERROR.getIndex(), ex.getMessage());
+			logger.error(ex.getMessage());
 			
 		} finally {
 			//如果用户选了邮件通知，则异步发送邮件
@@ -113,7 +114,7 @@ public class HiveQueryAsyncTask implements Runnable{
 			}
 			
 			//将自己从活跃线程列表剔除
-			ThreadPool.stopThread(queryHistId);
+			ThreadPool.stopThread(this.queryHistId);
 		}
 	}
 	
@@ -190,7 +191,13 @@ public class HiveQueryAsyncTask implements Runnable{
 	 */
 	public int _updateQueryHistoryStatusAndMsg(long id, int status, String message) {
 		String sql = "update query_history set status=?,message=? where id=?";
-		Object[] args = {status, message,id};
-		return this.jdbcTemplateProphet.update(sql, args);
+		Object[] args = {status, message, id};
+		int result = -1;
+		try {
+			result = this.jdbcTemplateProphet.update(sql, args);
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
+		return result;
 	}
 }

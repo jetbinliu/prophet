@@ -32,7 +32,7 @@ public class HQLParserTest01 {
         String sql22 = "select login.uid from login day_login left outer join (select uid from regusers where dt='20130101') day_regusers on day_login.uid=day_regusers.uid where day_login.dt='20130101' and day_regusers.uid is null";
         String sql23 = "select name from (select * from db1.zpc zzz left outer join db2.def) d";
         String sql24 = "drop database db4";
-        String parsesql = "select * from default.`user` limit 2";
+        String parsesql = "select terminal_id, count(1) from formatter.app_event_log where pt=20171226 and event_type=4 and get_json_object(event_attr,'$.event_id') in ('homepage_entry', 'homepage_entry_show') group by terminal_id";
         
         HQLParser hp= new HQLParser();
 		try {
