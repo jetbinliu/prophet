@@ -6,7 +6,7 @@ import com.prophet.common.HQLParser;
 
 public class HQLParserTest01 {
 	public static void main(String[] args) {
-        String parsesql = "select terminal_id, count(1) from formatter.app_event_log where pt=20171226 and event_type=4 and get_json_object(event_attr,'$.event_id') in ('homepage_entry', 'homepage_entry_show') group by terminal_id";
+        String parsesql = "select ";
         
         HQLParser hp= new HQLParser();
 		try {
