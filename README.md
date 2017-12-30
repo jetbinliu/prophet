@@ -15,8 +15,8 @@
 * 1.安装jdk，强烈推荐使用jdk 1.8
     * 安装jdk
     * 修改PATH
-* 2.下载文件
-    * 可以git clone 
+* 2.下载文件（非编译安装）
+    * 二进制文件下载地址：https://pan.baidu.com/s/1eSgx4fo
     * 或者下载ZIP包并解压，解压后会看到prophet_server、prophet_fe、prophet_sql三个目录
 * 3.后端服务部署
     * prophet_sql目录：连接到prophet会用到的mysql里source prophet.sql这个文件将库表建好
