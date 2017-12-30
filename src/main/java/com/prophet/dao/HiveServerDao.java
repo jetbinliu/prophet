@@ -7,12 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -41,7 +38,6 @@ public class HiveServerDao {
 	
 	public final static int PAGE_ROWS = 20;
 	public final static int COL_MAX_CHARS = 100;
-	final static Logger logger = LoggerFactory.getLogger(HiveServerDao.class);
 
 	/**
 	 * 开启线程向hive发送查询

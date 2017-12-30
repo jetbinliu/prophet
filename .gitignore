@@ -14,4 +14,4 @@ data/
 *.jar
 /.swp
 .git
-src/main/resources/application.properties.dev
+src/main/resources/application.properties.*

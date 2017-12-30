@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.prophet.service.HiveMetaStoreService;
 import com.prophet.service.HiveServerService;
@@ -45,7 +43,6 @@ public class HiveQueryController extends BaseController{
 	private QueryHistoryService queryHistoryService;
 	private HiveSecretDataService hiveSecretDataService;
 	
-	final static Logger logger = LoggerFactory.getLogger(HiveQueryController.class);
 
 	@Autowired
 	public void setHiveMetaStoreService(HiveMetaStoreService hiveMetaStoreService) {
@@ -283,7 +280,7 @@ public class HiveQueryController extends BaseController{
         String filename = com.prophet.config.HiveResultTextConfig.getDataFileName(this.getLoginUserInfo(request).get("loginedUser").toString(), queryHistId);
         File file = new File(filename);
         if (!file.exists()) {
-        	logger.error(String.format("数据文件%s不存在!", filename));
+        	//logger.error(String.format("数据文件%s不存在!", filename));
         } else {
         	//将文件解析成csv格式
         	LineIterator iter = null;

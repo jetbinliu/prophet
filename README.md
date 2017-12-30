@@ -1,51 +1,98 @@
 ## Prophet是什么？ 
-一个优秀的大数据查询平台，提供hive异步任务查询、LDAP用户、数据权限控制、历史查询任务与结果存储、邮件通知、excel下载等功能。
+* 一个优秀的大数据查询平台，提供hive异步任务查询、LDAP用户、表级查询权限控制、历史查询任务与结果存储、邮件通知、excel下载等功能。
+* 具有查询性能快、查询方便的特点
 
-## 开发环境：
+## 开发环境
 * java 8
 * springboot
 * VUE + iview
 
-## 安装步骤--非编译方式
-* 1.安装java
+## 准备工作
+* 搭建hadoop集群、hive集群(强烈推荐hive-server2-2.x版本)、metastore
+* 搭建prophet会用到的mysql，推荐mysql 5.6及以上版本
+
+## 安装步骤
+* 1.安装jdk，强烈推荐使用jdk 1.8
     * 安装jdk
     * 修改PATH
-* 2.安装prophet后端
-    * 修改配置文件
-    * 启动服务
+* 2.下载文件
+    * 可以git clone 
+    * 或者下载ZIP包并解压，解压后会看到prophet_server、prophet_fe、prophet_sql三个目录
+* 3.后端服务部署
+    * prophet_sql目录：连接到prophet会用到的mysql里source prophet.sql这个文件将库表建好
+    * prophet_server目录：后端服务，请部署在后端服务器适当目录下
+        * 修改主配置文件：prophet_server/conf/application.properties
+        * 启动服务：./bin/startup.sh
+        * 检查日志：./logs/prophet.log
+* 4.前端服务部署
+    * prophet_fe目录：前端页面，请部署在nginx服务器或某个web服务器目录下例如/static/prophet_fe/，并参照下一步nginx配置
+* 5.前端服务nginx配置
+```javascript
+upstream prophet{
+    ip_hash;
+    server 192.168.1.11:8090;
+    #server 192.168.1.12:8090;
+}
 
-## 安装步骤--编译方式
-* 1. 编译prophet-fe项目，具体参照prophet-fe项目README.md
-* 1. 编译prophet后端
-    * eclipse里在prophet项目Run As -> Maven package或Maven build..后输入package
+server {
+    listen  80;
+    server_name prophet.xxx.com;
 
-## 性能调优：
+    gzip    on;
+    gzip_min_length 1k;
+    gzip_proxied    expired no-cache no-store private auth;
+    gzip_types      text/plain text/css application/xml application/json application/javascript application/xhtml+xml;
+    
+    client_max_body_size 300M;
+    index index.php index.html index.htm;
+
+    access_log /log/nginx/prophet.access.log main;
+    error_log  /log/nginx/prophet.error.log;
+ 
+    location ~ \.json$ {
+        proxy_pass http://prophet;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        client_max_body_size 200m;
+        client_body_buffer_size 128k;
+        proxy_connect_timeout 86400;
+        #因为后端hive任务执行时间较长，因此该项应该设置无限大，单位秒
+        proxy_read_timeout 259200;    
+        proxy_buffer_size 4k;
+    }
+
+    location / {
+        root "/static/prophet_fe/";
+    }
+}
+```
+配置完重启nginx即可
+* 6.配置域名解析prophet.xxx.com到该nginx所在ip
+* 7.打开浏览器，访问http://prophet.xxx.com/，输入用户名和密码进行登录。
+    * 如果配置了LDAP：则填写LDAP账号，prophet内置用户系统不生效。
+    * 如果配置了prophet内置用户系统：则默认初始化管理账号为admin1，密码为admin1
+* 8.开始使用吧！
+
+## 系统截图
+* 1.登录页面
+    * ![image](https://github.com/jly8866/prophet/raw/master/screenshots/login.png)
+* 2.主查询界面
+    * ![image](https://github.com/jly8866/prophet/raw/master/screenshots/hive_query.png)
+* 3.所有机密表展示
+    * ![image](https://github.com/jly8866/prophet/raw/master/screenshots/all_secrets.png)
+* 4.标记哪些表成为机密表
+    * ![image](https://github.com/jly8866/prophet/raw/master/screenshots/config_secrets.png)
+* 5.内置用户系统管理
+    * ![image](https://github.com/jly8866/prophet/raw/master/screenshots/user_config.png)
+
+## 性能调优
 * prophet JVM能容纳的最大并发线程数NThreads = CPU核心数 * 总CPU利用率 * (1 + CPU等待时间/CPU处理时间)
     * 如果一个任务CPU处理时间为100ms，99ms是IO等待时间，系统8核心，CPU利用率50%，则NThreads = 8 * 50% * (1 + 99/100) = 7.96 ~ 8
     * 该指标可用于估算单进程prophet最大可运行的并发任务数
     * 如果指标不够则需要扩容
 
-## docker镜像化
-首先看Spring Boot应用程序的docker化，由于Spring Boot内嵌了tomcat、Jetty等容器，因此我们对docker镜像的要求就是需要java运行环境。我的应用代码的的Dockerfile文件如下：
-#基础镜像：仓库是java，标签用8u66-jdk
-FROM java:8u66-jdk
-#当前镜像的维护者和联系方式
-MAINTAINER duqi duqi@example.com
-#将打包好的spring程序拷贝到容器中的指定位置
-ADD target/bookpub-0.0.1-SNAPSHOT.jar /opt/bookpub-0.0.1-SNAPSHOT.jar
-#容器对外暴露8080端口
-EXPOSE 8080
-#容器启动后需要执行的命令
-CMD java -Djava.security.egd=file:/dev/./urandom -jar /opt/bookpub-0.0.1-SNAPSHOT.jar
-因为目前的示例程序比较简单，这个dockerfile并没有在将应用程序的数据存放在宿主机上。如果你的应用程序需要写文件系统，例如日志，最好利用VOLUME /tmp命令，这个命令的效果是：在宿主机的/var/lib/docker目录下创建一个临时文件并把它链接到容器中的/tmp目录。
-把这个Dockerfile放在项目的根目录下即可，后续通过docker-compose build统一构建：基础镜像是只读的，然后会在该基础镜像上增加新的可写层来供我们使用，因此java镜像只需要下载一次。
-docker-compose是用来做docker服务编排，参看《Docker从入门到实践》中的解释：
-Compose 项目目前在 Github 上进行维护，目前最新版本是 1.2.0。Compose 定位是“defining and running complex applications with Docker”，前身是 Fig，兼容 Fig 的模板文件。
-Dockerfile 可以让用户管理一个单独的应用容器；而 Compose 则允许用户在一个模板（YAML 格式）中定义一组相关联的应用容器（被称为一个 project，即项目），例如一个 Web 服务容器再加上后端的数据库服务容器等。
-单个docker用起来确实没什么用，docker技术的关键在于持续交付，通过与jekins的结合，可以实现这样的效果：开发人员提交push，然后jekins就自动构建并测试刚提交的代码，这就是我理解的持续交付。
+## 联系方式：
+QQ群：669833720
 
-## 后端.json接口返回status值说明：
-* 0: 正常
-* 1: 后端有异常，详见message
-* 2: 用户未登录
-* 3: 查询的数据表里有机密数据，而且当前用户没有该表查询权限
+加群请注明来历

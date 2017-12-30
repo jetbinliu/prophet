@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.prophet.service.HiveSecretDataService;
 import com.prophet.service.UserAuthService;
@@ -32,8 +30,6 @@ public class HiveSecretDataController extends BaseController{
 		this.userAuthService = userAuthService;
 	}
 
-
-	final static Logger logger = LoggerFactory.getLogger(HiveSecretDataController.class);
 
 
 	@RequestMapping(value = "/hive_secret/get_all_secrets.json", method = RequestMethod.GET)

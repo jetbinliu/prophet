@@ -14,9 +14,6 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.prophet.interfaces.UserAuthDaoInterface;
 
 /**
@@ -35,8 +32,6 @@ public class UserAuthLdapDao implements UserAuthDaoInterface{
 	private LdapContext ctx = null;				//LDAP连接上下文，后续都操作这个
 	private final Control[] connCtls = null;	//控制连接的一些属性
 
-	private final static Logger logger = LoggerFactory.getLogger(UserAuthLdapDao.class);
-	
 	public UserAuthLdapDao(){
 		
 	}
@@ -67,7 +62,7 @@ public class UserAuthLdapDao implements UserAuthDaoInterface{
 	
 		try {
 			ctx = new InitialLdapContext(env, connCtls);
-			logger.info("连接LDAP成功!");
+			//logger.info("连接LDAP成功!");
 		} catch (javax.naming.AuthenticationException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -109,7 +104,7 @@ public class UserAuthLdapDao implements UserAuthDaoInterface{
 			NamingEnumeration<SearchResult> en = ctx.search(this.USER_SEARCH_DN, filter, constraints);
 		
 			if (en == null || !en.hasMoreElements()) {
-				logger.info(String.format("LDAP里未找到该用户的信息! user:%s", uid));
+				//logger.info(String.format("LDAP里未找到该用户的信息! user:%s", uid));
 				return "";
 			}
 			while (en != null && en.hasMoreElements()) {
@@ -119,13 +114,13 @@ public class UserAuthLdapDao implements UserAuthDaoInterface{
 					userDN += si.getName();
 					userDN += "," + this.USER_SEARCH_DN;
 				} else {
-					logger.info(obj.toString());
+					//logger.info(obj.toString());
 				}
 			}
 			
 		} catch (Exception e) {
-			logger.info(String.format("查找用户时产生异常! user:%s 报错信息如下：", uid));
-			logger.error(e.getMessage());
+			//logger.info(String.format("查找用户时产生异常! user:%s 报错信息如下：", uid));
+			//logger.error(e.getMessage());
 		}
 		
 		return userDN;
@@ -149,14 +144,14 @@ public class UserAuthLdapDao implements UserAuthDaoInterface{
 			ctx.addToEnvironment(Context.SECURITY_PRINCIPAL, userDN);
 			ctx.addToEnvironment(Context.SECURITY_CREDENTIALS, password);
 			ctx.reconnect(connCtls);
-			logger.info(String.format("LDAP用户验证通过! user:%s", UID));
+			//logger.info(String.format("LDAP用户验证通过! user:%s", UID));
 			result = 0;
 		} catch (AuthenticationException e) {
-			logger.info(String.format("LDAP用户验证失败! user:%s，报错信息如下：", UID));
-			logger.warn(e.getMessage());
+			//logger.info(String.format("LDAP用户验证失败! user:%s，报错信息如下：", UID));
+			//logger.warn(e.getMessage());
 			result = 1;
 		} catch (NamingException e) {
-			logger.info(String.format("LDAP用户验证失败! user:%s，报错信息如下：", UID));
+			//logger.info(String.format("LDAP用户验证失败! user:%s，报错信息如下：", UID));
 			result = 1;
 		}
 		//一定要关闭LDAP连接

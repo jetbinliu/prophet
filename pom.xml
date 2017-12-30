@@ -9,7 +9,7 @@
   <groupId>com.prophet</groupId>
   <artifactId>prophet</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0</version>
   <name>prophet Maven Webapp</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -34,17 +34,7 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
-      <exclusions><!-- 去掉默认配置 -->  
-      	<exclusion>  
-	        <groupId>org.springframework.boot</groupId>  
-	        <artifactId>spring-boot-starter-logging</artifactId>  
-        </exclusion>  
-      </exclusions><!-- 去掉springbooot默认logger配置 -->
     </dependency>
-    <dependency> <!-- 引入log4j2依赖 -->  
-        <groupId>org.springframework.boot</groupId>  
-        <artifactId>spring-boot-starter-log4j2</artifactId>  
-    	</dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-jdbc</artifactId>
@@ -80,12 +70,22 @@
             <groupId>org.apache.hive</groupId>  
             <artifactId>hive-shims</artifactId>  
         </exclusion>  
+        <exclusion>  
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
     </exclusions>
     </dependency>
     <dependency>  
     	<groupId>org.apache.hadoop</groupId>  
     	<artifactId>hadoop-common</artifactId>
     	<version>2.5.1</version>
+    	<exclusions>
+    		<exclusion>  
+	            <groupId>org.slf4j</groupId>
+	            <artifactId>slf4j-log4j12</artifactId>
+	        </exclusion>
+    	</exclusions>
     </dependency>
     <dependency>
 	    <groupId>commons-io</groupId>
@@ -100,6 +100,12 @@
 	    <groupId>org.apache.hive</groupId>
 	    <artifactId>hive-exec</artifactId>
 	    <version>2.3.2</version>
+	    <exclusions>
+	    	<exclusion>  
+	            <groupId>org.slf4j</groupId>
+	            <artifactId>slf4j-log4j12</artifactId>
+	        </exclusion>
+	    </exclusions>
 	</dependency>
 	<dependency>
 	    <groupId>org.pentaho</groupId>
@@ -109,7 +115,8 @@
   </dependencies>
   <build>
   	<plugins>
-  		<plugin>
+  		<!-- 用了maven-assembly-plugin就不需要这个
+  		 <plugin>
   			<groupId>org.springframework.boot</groupId>
   			<artifactId>spring-boot-maven-plugin</artifactId>
   			<executions>  
@@ -120,7 +127,24 @@
 				</execution>  
 			</executions>
   		</plugin>
-  		 
+  		-->
+  		<plugin>
+	        <artifactId>maven-assembly-plugin</artifactId>
+	        <configuration>
+	            <descriptor><!--配置文件所在 -->
+	                src/main/resources/assembly.xml
+	            </descriptor>
+	        </configuration>
+	        <executions>
+	            <execution>
+	                <id>make-assembly</id>
+	                <phase>package</phase><!-- 绑定到package生命周期阶段上 -->
+	                <goals>
+	                    <goal>single</goal><!-- 只运行一次 -->      
+	                </goals>
+	            </execution>
+	        </executions>
+    	</plugin>
   	</plugins>
     <finalName>prophet</finalName>
   </build>

@@ -47,7 +47,7 @@ server.tomcat.accesslog.directory=tomcat_access_logs/
 #######################################prophet server#########################################
 
 #######################################logging################################################
-logging.config=/home/prophet_server/conf/logging.xml
+#logging.config=/home/prophet_server/conf/logging.xml
 #######################################logging################################################
 
 #####################################user auth################################################

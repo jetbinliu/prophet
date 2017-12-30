@@ -6,7 +6,7 @@ import com.prophet.common.HQLParser;
 
 public class HQLParserTest01 {
 	public static void main(String[] args) {
-        String parsesql = "select ";
+        String parsesql = "select a from t1";
         
         HQLParser hp= new HQLParser();
 		try {

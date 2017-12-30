@@ -18,8 +18,6 @@ import com.prophet.common.ThreadPool;
 import com.prophet.dao.EmailUtil;
 
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 开启多线程执行hive查询任务的线程执行体
@@ -34,8 +32,6 @@ public class HiveQueryAsyncTask implements Runnable{
 	private int emailNotify;
 	private EmailUtil emailUtil;
 	
-	final static Logger logger = LoggerFactory.getLogger(HiveQueryAsyncTask.class);
-
 	public void setJdbcTemplateProphet(JdbcTemplate jdbcTemplateProphet) {
 		this.jdbcTemplateProphet = jdbcTemplateProphet;
 	}
@@ -100,7 +96,6 @@ public class HiveQueryAsyncTask implements Runnable{
 		} catch (Exception ex) {
 			this._updateQueryHistoryStatusAndMsg(this.queryHistId, 
 					QueryHistoryStatusEnum.ERROR.getIndex(), ex.getMessage());
-			logger.error(ex.getMessage());
 			
 		} finally {
 			//如果用户选了邮件通知，则异步发送邮件
